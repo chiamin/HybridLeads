@@ -1,0 +1,18 @@
+basic
+{
+    t           = 1
+    mu          = 0
+    V           = 0.5
+
+    time_steps  = 100
+    dt          = inf
+    max_dim     = 32
+    ErrGoal     = 1e-12
+    MaxIter     = 40
+    ErrGoalInit = 1e-12
+    MaxIterInit = 20
+    SeedInit    = 123456789
+    auto_err    = yes
+    write       = yes
+    out_dir     = .
+}

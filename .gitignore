@@ -1,0 +1,8 @@
+*.o
+*.exe
+*.itensor
+.debug_objs
+out*
+*.out
+*.save
+*.inds
