@@ -1,0 +1,227 @@
+//
+// Copyright 2018 The Simons Foundation, Inc. - All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+#ifndef __ITENSOR_Z5_sigDiag_H
+#define __ITENSOR_Z5_sigDiag_H
+#include "itensor/mps/siteset.h"
+#include "itensor/util/str.h"
+
+namespace itensor {
+
+class Z5_sigDiagSite;
+
+using Z5_sigDiag = BasicSiteSet<Z5_sigDiagSite>;
+
+class Z5_sigDiagSite
+    {
+    Index s;
+    public:
+
+    Z5_sigDiagSite(Index I) : s(I) { }
+
+    Z5_sigDiagSite(Args const& args = Args::global())
+        {
+        auto ts = TagSet("Site,Z5");
+        if( args.defined("SiteNumber") )
+          ts.addTags("n="+str(args.getInt("SiteNumber")));
+        if(args.getBool("ConserveQNs",true))
+          {
+          s = Index(QN({"T",0,5}),1,
+                    QN({"T",1,5}),1,
+                    QN({"T",2,5}),1,
+                    QN({"T",3,5}),1,
+                    QN({"T",4,5}),1,
+                    Out,ts);
+          }
+        else
+          {
+          s = Index(5,ts);
+          }
+        }
+
+    Index
+    index() const { return s; }
+
+    IndexVal
+    state(std::string const& state)
+        {
+        if(state == "0") { return s(1); }
+        else
+        if(state == "1") { return s(2); }
+        else
+        if(state == "2") { return s(3); }
+        else
+        if(state == "3") { return s(4); }
+        else
+        if(state == "4") { return s(5); }
+        else
+            {
+            Error("State " + state + " not recognized");
+            }
+        return IndexVal{};
+        }
+
+	ITensor
+	op(std::string const& opname,
+	   Args const& args) const
+        {
+        auto sP = prime(s);
+
+        auto Zer = s(1);
+        auto ZerP = sP(1);
+        auto One = s(2);
+        auto OneP = sP(2);
+        auto Two = s(3);
+        auto TwoP = sP(3);
+        auto Thr = s(4);
+        auto ThrP = sP(4);
+        auto Fou = s(5);
+        auto FouP = sP(5);
+
+        auto Op = ITensor(dag(s),sP);
+
+        if(opname == "N")
+            {
+            Op.set(One,OneP,1);
+            Op.set(Two,TwoP,2);
+            Op.set(Thr,ThrP,3);
+            Op.set(Fou,FouP,4);
+            }
+        else
+        if(opname == "Tau")
+            {
+            Op.set(Fou,ZerP,1);
+            Op.set(Zer,OneP,1);
+            Op.set(One,TwoP,1);
+            Op.set(Two,ThrP,1);
+            Op.set(Thr,FouP,1);
+            }
+        else
+        if (opname == "LogTau")
+            {
+            Real a = 1.06895933e+00;
+            Real b = 6.60653200e-01;
+            Op.set(Zer,ZerP, 0);  Op.set(Zer,OneP, a);  Op.set(Zer,TwoP,-b);   Op.set(Zer,ThrP, b);  Op.set(Zer,FouP,-a);
+            Op.set(One,ZerP,-a);  Op.set(One,OneP, 0);  Op.set(One,TwoP, a);   Op.set(One,ThrP,-b);  Op.set(One,FouP, b);
+            Op.set(Two,ZerP, b);  Op.set(Two,OneP,-a);  Op.set(Two,TwoP, 0);   Op.set(Two,ThrP, a);  Op.set(Two,FouP,-b);
+            Op.set(Thr,ZerP,-b);  Op.set(Thr,OneP, b);  Op.set(Thr,TwoP,-a);   Op.set(Thr,ThrP, 0);  Op.set(Thr,FouP, a);
+            Op.set(Fou,ZerP, a);  Op.set(Fou,OneP,-b);  Op.set(Fou,TwoP, b);   Op.set(Fou,ThrP,-a);  Op.set(Fou,FouP, 0);
+
+/*            Cplx r1 = 8.64806266e-01;
+            Cplx r2 = 2.04153066e-01;
+            Cplx i1 = 2.51327412*1_i;
+            Cplx i2 = 0.62831853*1_i;
+            Op.set(Zer,ZerP, i1);  Op.set(Zer,OneP, -r1-i2);  Op.set(Zer,TwoP,-r2-i2);   Op.set(Zer,ThrP, r2-i2);  Op.set(Zer,FouP,r1-i2);
+            Op.set(One,ZerP, r1-i2);  Op.set(One,OneP, i1);  Op.set(One,TwoP, -r1-i2);   Op.set(One,ThrP, -r2-i2);  Op.set(One,FouP, r2-i2);
+            Op.set(Two,ZerP, r2-i2);  Op.set(Two,OneP, r1-i2);  Op.set(Two,TwoP, i1);   Op.set(Two,ThrP, -r1-i2);  Op.set(Two,FouP,-r2-i2);
+            Op.set(Thr,ZerP,-r2-i2);  Op.set(Thr,OneP, r2-i2);  Op.set(Thr,TwoP,r1-i2);   Op.set(Thr,ThrP, i1);  Op.set(Thr,FouP, -r1-i2);
+            Op.set(Fou,ZerP, -r1-i2);  Op.set(Fou,OneP,-r2-i2);  Op.set(Fou,TwoP, r2-i2);   Op.set(Fou,ThrP,r1-i2);  Op.set(Fou,FouP, i1);*/
+            }
+        else
+        if(opname == "TauSqr")
+            {
+            Op.set(Thr,ZerP,1);
+            Op.set(Fou,OneP,1);
+            Op.set(Zer,TwoP,1);
+            Op.set(One,ThrP,1);
+            Op.set(Two,FouP,1);
+            }
+        else
+        if(opname == "TauDag")
+            {
+            Op.set(Zer,FouP,1);
+            Op.set(One,ZerP,1);
+            Op.set(Two,OneP,1);
+            Op.set(Thr,TwoP,1);
+            Op.set(Fou,ThrP,1);
+            }
+        else
+        if(opname == "Sig")
+            {
+            Op.set(Zer,ZerP,1);
+            Op.set(One,OneP,cos(2.*Pi/5.)+sin(2.*Pi/5.)*1_i);
+            Op.set(Two,TwoP,cos(4.*Pi/5.)+sin(4.*Pi/5.)*1_i);
+            Op.set(Thr,ThrP,cos(6.*Pi/5.)+sin(6.*Pi/5.)*1_i);
+            Op.set(Fou,FouP,cos(8.*Pi/5.)+sin(8.*Pi/5.)*1_i);
+            }
+        else
+        if(opname == "SigSqr")
+            {
+            Op.set(Zer,ZerP,1);
+            Cplx c1 = cos(2.*Pi/5.)+sin(2.*Pi/5.)*1_i;
+            Cplx c2 = cos(4.*Pi/5.)+sin(4.*Pi/5.)*1_i;
+            Cplx c3 = cos(6.*Pi/5.)+sin(6.*Pi/5.)*1_i;
+            Cplx c4 = cos(8.*Pi/5.)+sin(8.*Pi/5.)*1_i;
+            Op.set(One,OneP,c1*c1);
+            Op.set(Two,TwoP,c2*c2);
+            Op.set(Thr,ThrP,c3*c3);
+            Op.set(Fou,FouP,c4*c4);
+            }
+        else
+        if(opname == "SigDag")
+            {
+            Op.set(Zer,ZerP,1);
+            Op.set(One,OneP,cos(2.*Pi/5.)-sin(2.*Pi/5.)*1_i);
+            Op.set(Two,TwoP,cos(4.*Pi/5.)-sin(4.*Pi/5.)*1_i);
+            Op.set(Thr,ThrP,cos(6.*Pi/5.)-sin(6.*Pi/5.)*1_i);
+            Op.set(Fou,FouP,cos(8.*Pi/5.)-sin(8.*Pi/5.)*1_i);
+            }
+        else
+        if(opname == "Proj0")
+            {
+            Op.set(Zer,ZerP,1);
+            }
+        else
+        if(opname == "Proj1")
+            {
+            Op.set(One,OneP,1);
+            }
+        else
+        if(opname == "Proj2")
+            {
+            Op.set(Two,TwoP,1);
+            }
+        else
+        if(opname == "Proj3")
+            {
+            Op.set(Thr,ThrP,1);
+            }
+        else
+        if(opname == "Proj4")
+            {
+            Op.set(Fou,FouP,1);
+            }
+        else
+            {
+            Error("Operator \"" + opname + "\" name not recognized");
+            }
+
+        return Op;
+        }
+
+    //
+    // Deprecated, for backwards compatibility
+    //
+
+    Z5_sigDiagSite(int n, Args const& args = Args::global())
+        {
+        *this = Z5_sigDiagSite({args,"SiteNumber=",n});
+        }
+
+    };
+
+} //namespace itensor
+
+#endif
