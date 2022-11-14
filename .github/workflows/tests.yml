@@ -10,7 +10,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/${{ github.actor }}/hybridleads:latest
+      image: ghcr.io/${{ github.actor }}/hybridleads:main
     steps:
       - uses: actions/checkout@v3
 
