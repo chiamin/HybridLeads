@@ -23,7 +23,7 @@ RUN git clone --branch v3 https://github.com/ITensor/ITensor.git $PKGDIR/itensor
     cp options.mk.sample options.mk && \
     make -e
 
-# Install 3rd party ITensor utilities
+# Download 3rd party ITensor utilities
 RUN git clone https://github.com/chiamin/itensor.utility.git $PKGDIR/itensor.utility
 
 # Install Catch2 framework for unit test
