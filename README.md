@@ -5,11 +5,15 @@ Installation
 
 1. Container
 
-    * Build the image:
+    * Pull the image:
+    ```
+    docker pull ghcr.io/chiamin/hybridleads:main
+    ```
+    * Build the image by yourself:
     ```
     docker build --no-cache --force-rm -t hybridleads .
     ```
-    * Run the image:
+    * Run the container:
     ```
     docker run --rm -it -v $(pwd)/tests:/home/tests hybridleads
     ```
