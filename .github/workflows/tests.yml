@@ -1,0 +1,26 @@
+name: tests
+
+on:
+  workflow_run:
+    workflows: [ "docker-build" ]
+    types:
+      - completed
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}:latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build
+        run: |
+          cd tests/
+          cmake -B build
+          cd build
+          make
+
+      - name: Unit Test
+        run: |
+          ./test.exe
