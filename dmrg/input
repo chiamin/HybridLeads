@@ -1,0 +1,31 @@
+basic
+{
+    L = 100
+    imp_site = 50
+    t = 1
+    t_impL = 1e-3
+    t_impR = 1e-3
+    muL = -0.2
+    muR = 0.2
+    mu_imp = 0
+    V = 0
+    V_impL = 0
+    V_impR = 0
+
+    read_dir_L = ../../itdvp/mu-0.2
+    read_dir_R = ../../itdvp/mu0.2
+    write_to_file = yes
+    outdir = Vg0.4
+    out_minm = 0
+
+    useSVD = yes
+    SVDMethod = gesdd
+    ConserveQNs = no
+
+    WriteDim = 2000
+    sweeps
+    {
+        maxm   cutoff   niter  noise    nsweep
+        32     1E-10    10     1e-8     6
+    }
+}
