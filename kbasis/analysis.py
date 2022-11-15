@@ -61,17 +61,14 @@ def get_data (fname):
     L_device = get_para (fname, 'L_device', int)
     L = 2*L_lead + L_device
     Nstep = get_para (fname, 'step =', int, last=True)
-    iC = get_para (fname, 'charge site', int)
     hopt = get_hop_t (fname)
-    maxnC = get_para (fname, 'maxCharge', int)
     t_lead = get_para (fname, 't_lead', float)
 
     jLs = np.full (Nstep, np.nan)
     jRs = np.full (Nstep, np.nan)
-    ns = np.full ((Nstep,L+1), np.nan)
-    Ss = np.full ((Nstep,L+1), np.nan)
+    ns = np.full ((Nstep,L), np.nan)
+    Ss = np.full ((Nstep,L), np.nan)
     dims = np.full ((Nstep,L), np.nan)
-    nCs = np.full ((Nstep,2*maxnC+1), np.nan)
     with open(fname) as f:
         for line in f:
             line = line.lstrip()
@@ -99,18 +96,12 @@ def get_data (fname):
                 i = int(tmp[1])
                 m = float(tmp[-1])
                 dims[step-1,i-1] = m
-            elif line.startswith('*nC'):
-                tmp = line.split()
-                n = int(tmp[-2])
-                nC = float(tmp[-1])
-                nCs[step-1,n+maxnC] = nC
     # jLs: current for the link that is left to the scatterer
     # jRs: current for the link that is right to the scatterer
     # ns: occupasion
     # Ss: entanglement entropy
     # dims: bond dimension
-    # nCs: distribution on the charge site
-    return Nstep, L, jLs, jRs, ns, Ss, dims, nCs
+    return Nstep, L, jLs, jRs, ns, Ss, dims
 
 def plot_prof (ax, data, dt, label=''):
     Nstep, L = np.shape(data)
@@ -162,7 +153,7 @@ if __name__ == '__main__':
         en_basis, segs = get_basis (fname)
 
         # Get data
-        Nstep, L, jLs, jRs, ns, Ss, dims, nCs = get_data (fname)
+        Nstep, L, jLs, jRs, ns, Ss, dims = get_data (fname)
         dt = get_para (fname, 'dt', float)
         m = get_para (fname, 'Largest link dim', int)
         ts = dt * np.arange(1,Nstep+1)
@@ -174,6 +165,7 @@ if __name__ == '__main__':
         ps.set(ax2)
 
         f,ax = pl.subplots()
+        print (len(segs), np.shape(ns))
         ii = segs == 'L'
         plot_time_slice (ax, ns[:,ii], n=5, marker='.', ls='None', label='L', xs=en_basis[ii])
         ii = segs == 'R'
@@ -182,23 +174,20 @@ if __name__ == '__main__':
         plot_time_slice (ax, ns[:,ii], n=5, marker='+', ls='None', label='S', xs=en_basis[ii])
         for x in np.where (ii)[0]:
             ax.axvline (en_basis[x], ls='--', c='gray', alpha=0.5)
-        ii = segs == 'C'
-        plot_time_slice (ax, ns[:,ii], n=5, marker='*', ls='None', label='C', xs=en_basis[ii])
         ax.set_xlabel ('energy')
         ax.set_ylabel ('occupasion')
         ax.legend()
         ps.set(ax)
 
         f,ax = pl.subplots()
-        sites = np.array(range(1,L+2))
+        sites = np.array(range(1,L+1))
+        print (len(segs), np.shape(ns))
         ii = segs == 'L'
         plot_time_slice (ax, ns[:,ii], n=5, marker='.', ls='None', label='L', xs=sites[ii])
         ii = segs == 'R'
         plot_time_slice (ax, ns[:,ii], n=5, marker='x', ls='None', label='R', xs=sites[ii])
         ii = segs == 'S'
         plot_time_slice (ax, ns[:,ii], n=5, marker='+', ls='None', label='S', xs=sites[ii])
-        ii = segs == 'C'
-        plot_time_slice (ax, ns[:,ii], n=5, marker='*', ls='None', label='C', xs=sites[ii])
         ax.set_xlabel ('site')
         ax.set_ylabel ('occupasion')
         ax.legend()
@@ -229,17 +218,6 @@ if __name__ == '__main__':
         ax.plot (ts, max_dims, marker='.')
         ax.set_xlabel ('Time')
         ax.set_ylabel ('Bond dimension')
-        ps.set(ax)
-
-        # Charge site occupasion
-        f,ax = pl.subplots()
-        maxnC = get_para (fname, 'maxCharge', int)
-        cs = range(-maxnC,maxnC+1)
-        for i in range(len(cs)):
-            ax.plot (ts, nCs[:,i], label='n='+str(cs[i]));
-        ax.set_xlabel ('time')
-        ax.set_ylabel ('occupassion')
-        ax.legend()
         ps.set(ax)
 
         # current vs time

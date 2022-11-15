@@ -77,7 +77,7 @@ void TDVPObserver<SitesType> :: measure (const Args& args)
         Real S = EntangEntropy (spectrum());
         cout << "\t*entS " << oc << " " << S << endl;
 
-        if (oc == _charge_site)
+        /*if (oc == _charge_site)
         {
             auto denmat = psi()(oc) * dag(prime(psi()(oc),"Site"));
             denmat.takeReal();
@@ -86,7 +86,7 @@ void TDVPObserver<SitesType> :: measure (const Args& args)
             int maxOcc = _sites.maxOcc();
             for(int i = 1; i <= dim(ii); i++)
                 cout << "\t*nC " << i-maxOcc-1 << " " << elt (denmat,i,i) << endl;
-        }
+        }*/
     }
 
     // At the end of a sweep

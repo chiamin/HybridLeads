@@ -1,29 +1,21 @@
 basic
 {
-    L_lead = 20
-    L_device = 4
+    L_lead = 50
+    L_device = 1
     t_lead = 1
-    t_device = 0.4
+    t_device = 0.1
     t_contactL = 0.2
     t_contactR = 0.2
     mu_leadL = 0
     mu_leadR = 0
-    mu_device = -0.1
-    Delta = 0.5
-    Ec = 0.5
-    Ng = 0
-    EJ = 0
-    damp_decay_length = 40
-    maxCharge = 5
-
-    // Can be SC or real_space
-    scatter_basis = SC
+    mu_device = 0
+    damp_decay_length = 0
 
     mu_biasL = 0.05
     mu_biasS = 0
     mu_biasR = -0.05
     dt = 1
-    time_steps = 40
+    time_steps = 20
 
     NumCenter = 1
     mixNumCenter = no
@@ -55,5 +47,11 @@ basic
     {
         maxm   minm   cutoff   niter  noise    nsweep
         2000   16     1E-7     30     0        1
+    }
+
+    DMRG_sweeps
+    {
+        maxm   minm   cutoff   niter  noise    nsweep
+        20     16     1E-10    6      0        2
     }
 }
