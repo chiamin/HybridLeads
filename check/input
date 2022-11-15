@@ -1,0 +1,47 @@
+basic
+{
+    L_lead = 50
+    L_device = 1
+    t_lead = 1
+    t_device = 0.1
+    t_contact = 0.2
+    mu_leadL = 0
+    mu_leadR = 0
+    mu_device = 0
+    V = 0
+    Delta = 0
+
+    mu_biasL      = 0.05
+    mu_biasS      = 0
+    mu_biasR      = -0.05
+    dt            = 1
+    time_steps    = 100
+    NumCenter     = 2
+    Truncate      = yes
+
+    write_to_file = no
+    outdir = .
+    out_minm = 0
+
+    useSVD = yes
+    SVDMethod = gesdd
+
+    WriteDim = 2000
+    DMRG
+    {
+        maxm   cutoff   niter  noise    nsweep
+        16    1E-12    10     1e-6      2
+        32    1E-12    10     1e-8      2
+        64    1E-12    10     0         2
+    }
+        128   1E-12    10     0        4
+        200   1E-12    10     0        3
+        300   1E-12    10     0        3
+    }
+
+    TDVP
+    {
+        maxm   minm   cutoff   niter  noise    nsweep
+        128    8      1E-8     20     0        1
+    }
+}
