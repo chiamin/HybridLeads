@@ -19,28 +19,21 @@ Timers timer;
 using namespace itensor;
 using namespace std;
 
+// Define some parameters
 struct Para
 {
-    Real Ec=0., Ng=0., Delta=0., EJ=0., tcL=0., tcR=0.;
+    Real tcL=0., tcR=0.;
 
     void write (ostream& s) const
     {
         iut::write(s,tcL);
         iut::write(s,tcR);
-        iut::write(s,Ec);
-        iut::write(s,Ng);
-        iut::write(s,Delta);
-        iut::write(s,EJ);
     }
 
     void read (istream& s)
     {
         iut::read(s,tcL);
         iut::read(s,tcR);
-        iut::read(s,Ec);
-        iut::read(s,Ng);
-        iut::read(s,Delta);
-        iut::read(s,EJ);
     }
 };
 
@@ -90,6 +83,7 @@ void print_orbs (const vector<SortInfo>& orbs)
     }
 }
 
+// Make MPO for the current operator
 template <typename Basis1, typename Basis2, typename SiteType>
 MPO get_current_mpo (const SiteType& sites, const Basis1& basis1, const Basis2& basis2, int i1, int i2, const ToGlobDict& to_glob)
 {
@@ -122,12 +116,7 @@ int main(int argc, char* argv[])
     auto mu_biasL   = input.getReal("mu_biasL");
     auto mu_biasS   = input.getReal("mu_biasS");
     auto mu_biasR   = input.getReal("mu_biasR");
-    auto Delta      = input.getReal("Delta");
-    auto Ec         = input.getReal("Ec");
-    auto Ng         = input.getReal("Ng");
-    auto EJ         = input.getReal("EJ");
     auto damp_decay_length = input.getInt("damp_decay_length",0);
-    auto maxCharge  = input.getInt("maxCharge");
 
     auto dt            = input.getReal("dt");
     auto time_steps    = input.getInt("time_steps");
@@ -166,14 +155,14 @@ int main(int argc, char* argv[])
     MPO H;
     // Define 
     int step = 1;
-    auto sites = MixedBasis();
+    auto sites = Fermion();
     Para para;
     Args args_basis;
 
     ToGlobDict to_glob;
     ToLocDict to_loc;
     OneParticleBasis leadL, leadR, charge;
-    BdGBasis scatterer;
+    OneParticleBasis scatterer;
 
     // -- Initialization --
     if (!read)
@@ -187,38 +176,38 @@ int main(int argc, char* argv[])
         leadR = OneParticleBasis ("R", L_lead, t_lead, mu_leadR, damp_fac, false, true);
         // Create basis for scatterer
         cout << "H dev" << endl;
-        scatterer = BdGBasis ("S", L_device, t_device, mu_device, Delta);
-        // Create basis for the charge site
-        charge = OneParticleBasis ("C", 1);
+        scatterer = OneParticleBasis ("S", L_device, t_device, mu_device);
 
         // Combine and sort all the basis states
-        auto info = sort_by_energy_charging (charge, leadL, leadR, scatterer);
+        auto info = sort_by_energy (leadL, leadR, scatterer);
         tie(to_glob, to_loc) = make_orb_dicts (info);
         print_orbs(info);
 
         // SiteSet
         int N = to_glob.size();
-        int charge_site = to_glob.at({"C",1});
-        // Find the global indices for the scatterer sites
-        vector<int> scatter_sites;
-        for(int i = 1; i <= scatterer.size(); i++)
-        {
-            scatter_sites.push_back (to_glob.at({"S",i}));
-        }
-        // Make SiteSet
-        auto systype = (EJ == 0. ? "SC_scatter" : "SC_Josephson_scatter");
-        args_basis = {"MaxOcc",maxCharge,"SystemType",systype};
-        sites = MixedBasis (N, scatter_sites, charge_site, args_basis);
-        cout << "charge site = " << charge_site << endl;
+        sites = Fermion (N);
 
-        // Make Hamiltonian MPO
-        para.Ec = Ec;   para.Ng = Ng;   para.Delta = Delta;  para.EJ = EJ;  para.tcL = t_contactL;  para.tcR = t_contactR;
-        auto ampo = get_ampo_Kitaev_chain (leadL, leadR, scatterer, charge, sites, para, to_glob);
+        // Make Hamiltonian MPO for time evolution
+        para.tcL = t_contactL;  para.tcR = t_contactR;
+        auto ampo = get_ampo_tight_binding (leadL, leadR, scatterer, sites, para, to_glob);
         H = toMPO (ampo);
         cout << "MPO dim = " << maxLinkDim(H) << endl;
 
-        // Initialze MPS
-        psi = get_ground_state_BdG_scatter (leadL, leadR, scatterer, sites, mu_biasL, mu_biasR, para, maxCharge, to_glob);
+        // Initialize MPS
+        // *********************************
+        {
+            /*auto para0 = para;
+            para0.tcL = 0.;
+            para0.tcR = 0.;
+            auto leadL0 = OneParticleBasis ("L", L_lead, t_lead, mu_leadL+mu_biasL, damp_fac, true, true);
+            auto leadR0 = OneParticleBasis ("R", L_lead, t_lead, mu_leadR+mu_biasR, damp_fac, false, true);*/
+            psi = get_non_inter_ground_state (leadL, leadR, scatterer, sites, mu_leadL+mu_biasL, mu_device+mu_biasS, mu_leadR+mu_biasR, to_glob);
+            /*auto ampo0 = get_ampo_tight_binding (leadL0, leadR0, scatterer, sites, para, to_glob);
+            auto H0 = toMPO (ampo0);
+            auto sweeps0 = iut::Read_sweeps (infile, "DMRG_sweeps");
+            dmrg (psi, H0, sweeps0, {"WriteDim",WriteDim});*/
+        }
+        // *********************************
         psi.position(1);
 
         // Check initial energy
@@ -227,13 +216,13 @@ int main(int argc, char* argv[])
     else
     {
         readAll (read_dir+"/"+read_file, psi, H, para, args_basis, step, to_glob, to_loc);
-        sites = MixedBasis (siteInds(psi), args_basis);
+        sites = Fermion (siteInds(psi));
     }
     // -- End of initialization --
 
 
     // -- Observer --
-    auto obs = TDVPObserver (sites, psi, {"charge_site",to_glob.at({"C",1})});
+    auto obs = TDVPObserver (sites, psi);
     // Current MPO
     auto jmpoL = get_current_mpo (sites, leadL, leadL, -2, -1, to_glob);
     auto jmpoR = get_current_mpo (sites, leadR, leadR, 1, 2, to_glob);
@@ -243,10 +232,13 @@ int main(int argc, char* argv[])
     cout << sweeps << endl;
     psi.position(1);
     Real en, err;
+
     Args args_tdvp_expansion = {"Cutoff",globExpanCutoff, "Method","DensityMatrix",
                                 "KrylovOrd",globExpanKrylovDim, "DoNormalize",true, "Quiet",true};
     Args args_tdvp  = {"Quiet",true,"NumCenter",NumCenter,"DoNormalize",true,"Truncate",Truncate,
                        "UseSVD",UseSVD,"SVDmethod",SVDmethod,"WriteDim",WriteDim,"mixNumCenter",mixNumCenter};
+
+
     LocalMPO PH (H, args_tdvp);
     while (step <= time_steps)
     {
@@ -263,7 +255,6 @@ int main(int argc, char* argv[])
 
         // Time evolution
         timer["tdvp"].start();
-        //tdvp (psi, H, 1_i*dt, sweeps, obs, args_tdvp);
         TDVPWorker (psi, PH, 1_i*dt, sweeps, obs, args_tdvp);
         timer["tdvp"].stop();
         auto d1 = maxLinkDim(psi);

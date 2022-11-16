@@ -5,6 +5,8 @@ out*
 *.save
 *.inds
 tests/build/*
+*.pdf
+*.png
 
 ### C++ template
 # Prerequisites

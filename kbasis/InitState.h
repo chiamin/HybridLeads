@@ -126,8 +126,8 @@ exit(0);*/
     return psi;
 }
 
-template <typename BasisL, typename BasisR, typename BasisS, typename BasisC, typename SiteType>
-MPS get_non_inter_ground_state (const BasisL& leadL, const BasisR& leadR, const BasisS& scatterer, const BasisC& charge,
+template <typename BasisL, typename BasisR, typename BasisS, typename SiteType>
+MPS get_non_inter_ground_state (const BasisL& leadL, const BasisR& leadR, const BasisS& scatterer,
                                 const SiteType& sites, Real muL, Real muS, Real muR, const ToGlobDict& to_glob)
 {
     int N = to_glob.size();
@@ -162,12 +162,6 @@ MPS get_non_inter_ground_state (const BasisL& leadL, const BasisR& leadR, const 
     occ_negative_en_states (leadL, muL);
     occ_negative_en_states (leadR, muR);
     occ_negative_en_states (scatterer, muS);
-
-    // Capacity site
-    {
-        int j = to_glob.at({"C",1});
-        state.at(j) = "0";
-    }
 
     InitState init (sites);
     for(int i = 1; i <= N; i++)

@@ -5,7 +5,7 @@
 #include "itensor/all.h"
 #include "Entanglement.h"
 #include "ContainerUtility.h"
-using namespace iut;
+using namespace vectool;
 using namespace iutility;
 
 template <typename SitesType>
@@ -21,7 +21,6 @@ class TDVPObserver : public DMRGObserver
         {
             _write = args.getBool ("Write",false);
             _out_dir = args.getString("out_dir",".");
-            _charge_site = args.getInt("charge_site",-1);
         }
 
         void measure (const Args& args);
@@ -31,10 +30,9 @@ class TDVPObserver : public DMRGObserver
         const Spectrum& spec (int i) const { return _specs.at(i); }
 
     private:
-        bool        _write;
-        string      _out_dir;	// empty string "" if not write
-        SitesType   _sites;
-        int         _charge_site=-1;
+        bool                    _write;
+        string                  _out_dir;	// empty string "" if not write
+        SitesType               _sites;
 
         // Observables
         vector<Real>        _ns;
@@ -63,37 +61,28 @@ void TDVPObserver<SitesType> :: measure (const Args& args)
     int oc = orthoCenter(psi());
     int nc = args.getInt("NumCenter");
     // measure during the second half of sweep
-    if (oc == N || ha == 2)
+    if ((nc == 2 && oc == N) || ha == 2)
     {
         // Density
-        ITensor n_op = noPrime (psi().A(oc) * _sites.op("N",oc), "Site");
-
-        n_op *= dag(psi().A(oc));
-        Real ni = real(eltC(n_op));
-        cout << "\t*den " << oc << " " << ni << endl;
+        ITensor n_tmp = psi().A(oc) * _sites.op("N",oc);
+        n_tmp.noPrime("Site");
+        n_tmp *= dag(psi().A(oc));
+        Real ni = toReal (n_tmp);
+        cout << "\tn " << oc << " = " << ni << endl;
         _ns.at(oc-1) = ni;
 
         // Entanglement entropy
         Real S = EntangEntropy (spectrum());
-        cout << "\t*entS " << oc << " " << S << endl;
-
-        /*if (oc == _charge_site)
-        {
-            auto denmat = psi()(oc) * dag(prime(psi()(oc),"Site"));
-            denmat.takeReal();
-            auto [Q,D] = diagHermitian (denmat);
-            auto ii = denmat.inds()(1);
-            int maxOcc = _sites.maxOcc();
-            for(int i = 1; i <= dim(ii); i++)
-                cout << "\t*nC " << i-maxOcc-1 << " " << elt (denmat,i,i) << endl;
-        }*/
+        cout << "\tentang entropy " << oc << " = " << S << endl;
     }
 
     // At the end of a sweep
     if (oc == 1 && ha == 2 && b == 1)
     {
         for(int i = 1; i < N; i++)
-            cout << "\t*m " << i << " " << dim(rightLinkIndex (psi(), i)) << endl;
+        {
+            cout << "\tbond dim " << i << " = " << dim(rightLinkIndex (psi(), i)) << endl;
+        }
 
         if (_write)
         {

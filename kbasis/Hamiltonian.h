@@ -23,8 +23,33 @@ quadratic_operator_new (const Basis1& basis1, const Basis2& basis2, int i1, int 
     return ops;
 }
 
+// Add Cdagger_i1 C_i2 into AutoMPO ampo.
+// Here i1 and i2 are two sites in real space
 template <typename Basis1, typename Basis2, typename NumType>
 void add_CdagC (AutoMPO& ampo, const Basis1& basis1, const Basis2& basis2, int i1, int i2, NumType coef, const ToGlobDict& to_glob)
+{
+    if (i1 < 0) i1 += basis1.size() + 1;
+    if (i2 < 0) i2 += basis2.size() + 1;
+    vector <tuple <auto,int,bool,int,bool>> terms = quadratic_operator_new (basis1, basis2, i1, i2, true, false);
+
+    string p1 = basis1.name(),
+           p2 = basis2.name();
+    // Hopping terms
+    for(auto [c12, k1, dag1, k2, dag2] : terms)  // coef, k1, dag1, k2, dag2
+    {
+        int j1 = to_glob.at({p1,k1});
+        int j2 = to_glob.at({p2,k2});
+        string op1 = (dag1 ? "Cdag" : "C");
+        string op2 = (dag2 ? "Cdag" : "C");
+        Real c = coef * c12;
+        ampo += c, op1, j1, op2, j2;
+    }
+}
+
+// Add Cdagger_i1 C_i2 into AutoMPO ampo.
+// Here i1 and i2 are two sites in real space
+template <typename Basis1, typename Basis2, typename NumType>
+void add_CdagC_charge (AutoMPO& ampo, const Basis1& basis1, const Basis2& basis2, int i1, int i2, NumType coef, const ToGlobDict& to_glob)
 {
     if (i1 < 0) i1 += basis1.size() + 1;
     if (i2 < 0) i2 += basis2.size() + 1;
@@ -96,7 +121,7 @@ AutoMPO get_ampo_Kitaev_chain (const BasisL& leadL, const BasisR& leadR, const B
 
     AutoMPO ampo (sites);
 
-    // Diagonal terms
+    // Diagonal terms, including the non-interacting and the SC couplings
     string sname = scatterer.name();
     auto add_diag = [&ampo, &to_glob, &sname] (const auto& basis)
     {
@@ -131,17 +156,7 @@ AutoMPO get_ampo_Kitaev_chain (const BasisL& leadL, const BasisR& leadR, const B
         ampo += para.Ec,"NSqr",jc;
         ampo += para.Ec * para.Ng * para.Ng, "I", jc;
         ampo += -2.*para.Ec * para.Ng, "N", jc;
-//        ampo +=  0.5*para.Ec,"NSqr",jc;
-//        ampo += -0.5*para.Ec,"N",jc;
     }
-
-    // Superconducting
-    /*if (para.Delta != 0.)
-    {
-        auto const& chain = sys.parts().at("S");
-        for(int i = 1; i < visit (basis::size(), chain); i++)
-            add_SC (ampo, sys, "S", "S", i, i+1, para.Delta);
-    }*/
 
     // Josephson hopping
     if (para.EJ != 0.)
@@ -149,6 +164,43 @@ AutoMPO get_ampo_Kitaev_chain (const BasisL& leadL, const BasisR& leadR, const B
         int jc = to_glob.at({cname,1});
         ampo += para.EJ,"A2",jc;
         ampo += para.EJ,"A2dag",jc;
+    }
+    return ampo;
+}
+
+template <typename BasisL, typename BasisR, typename BasisS, typename SiteType, typename Para>
+AutoMPO get_ampo_tight_binding (const BasisL& leadL, const BasisR& leadR, const BasisS& scatterer, const SiteType& sites, const Para& para, const ToGlobDict& to_glob)
+{
+    mycheck (length(sites) == to_glob.size(), "size not match");
+
+    AutoMPO ampo (sites);
+
+    // Non-interacting terms
+    string sname = scatterer.name();
+    auto add_diag = [&ampo, &to_glob, &sname] (const auto& basis)
+    {
+        string p = basis.name();
+        for(int i = 1; i <= basis.size(); i++)
+        {
+            int j = to_glob.at({p,i});
+            auto en = basis.en(i);
+            ampo += en, "N", j;
+        }
+    };
+    add_diag (leadL);
+    add_diag (leadR);
+    add_diag (scatterer);
+
+    // Contact hopping
+    if (para.tcL != 0.)
+    {
+        add_CdagC (ampo, leadL, scatterer, -1, 1, -para.tcL, to_glob);
+        add_CdagC (ampo, scatterer, leadL, 1, -1, -para.tcL, to_glob);
+    }
+    if (para.tcR != 0.)
+    {
+        add_CdagC (ampo, leadR, scatterer, 1, -1, -para.tcR, to_glob);
+        add_CdagC (ampo, scatterer, leadR, -1, 1, -para.tcR, to_glob);
     }
     return ampo;
 }
