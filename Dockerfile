@@ -19,11 +19,12 @@ RUN apt update && \
     liblapacke-dev \
     libopenblas-dev
 
-# Copy external dependencies from git submodules into /root
-COPY ext/. $PKGDIR
+# Copy external dependencies from git submodules into $PKGDIR
+COPY ext $PKGDIR
 
 # Install ITensor
 RUN cd $PKGDIR/itensor && \
+    ls -a && \
     cp options.mk.sample options.mk && \
     make -e
 
