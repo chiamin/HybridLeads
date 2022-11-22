@@ -20,8 +20,7 @@ RUN apt update && \
     libopenblas-dev
 
 # Copy external dependencies from git submodules into /root
-RUN cd $WORKDIR && \
-    cp -R ext/. $PKGDIR
+COPY ext/. $PKGDIR
 
 # Install ITensor
 RUN cd $PKGDIR/itensor && \
