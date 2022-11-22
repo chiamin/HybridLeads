@@ -8,4 +8,4 @@
 [submodule "ext/catch2"]
 	path = ext/catch2
 	url = https://github.com/catchorg/Catch2.git
-    branch = v3.2.0
+	branch = v3.2.0
