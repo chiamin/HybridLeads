@@ -60,3 +60,9 @@ Compiling flags are pre-set as enviroment variables in the Docker container, one
 make -e
 ```
 to use those flags.
+
+Then, for instance, one can run the executable ```itdvp/itdvp.exe``` by
+```
+./itdvp.exe input
+```
+with the parameters been assigned in ```itdvp/input```.
