@@ -24,7 +24,6 @@ COPY ext $PKGDIR
 
 # Install ITensor
 RUN cd $PKGDIR/itensor && \
-    ls -a && \
     cp options.mk.sample options.mk && \
     make -e
 
