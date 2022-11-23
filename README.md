@@ -18,10 +18,12 @@ Installation
     docker run --rm -it -v $(pwd)/tests:/home/tests ghcr.io/chiamin/hybridleads:main
     ```
     **Note**: replace the image name `ghcr.io/chiamin/hybridleads:main` by `hybridleads` if you're building the image by yourself.
-    * Package version: 
+    * Package version:
       * `gcc 12.2.0`
       * `c++17`
-      * `ITensor v3`
+      * `cmake 3.10^`
+      * `ITensor v3.1.11`
+      * `Catch2 v3.2.0`
     * Environment variables:
       The compiling flags for ITensor,
       * `CCCOM="g++ -m64 -std=c++17 -fconcepts -fPIC"`
@@ -29,7 +31,7 @@ Installation
       * `BLAS_LAPACK_LIBFLAGS="-lpthread -L/usr/lib -lblas -llapack"`
 
 2. Build from scratch
-    
+
     There're few prior requirements,
     * lapack, blas
     * [ITensor](https://itensor.org/)
