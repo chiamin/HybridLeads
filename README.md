@@ -1,4 +1,6 @@
 # HybridLeads
+[![docker-build](https://github.com/tanlin2013/HybridLeads/actions/workflows/build.yml/badge.svg)](https://github.com/tanlin2013/HybridLeads/actions/workflows/build.yml)
+[![tests](https://github.com/tanlin2013/HybridLeads/actions/workflows/tests.yml/badge.svg)](https://github.com/tanlin2013/HybridLeads/actions/workflows/tests.yml)
 
 Installation
 ------------
