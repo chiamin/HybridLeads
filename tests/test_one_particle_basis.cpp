@@ -43,62 +43,31 @@ TEST_CASE("Check one particle basis", "[OneParticleBasis]") {
   }
 }
 
-TEST_CASE("Check auto MPO in hybrid basis", "[HybridBasis]") {
+TEST_CASE("Check auto MPO in real space basis", "[RealSpaceBasis]") {
   int N = 3;
   auto t = 0.5;
-  auto mu = 0.0;
-  auto sites = Fermion(N, {"ConserveQNs=", false});
+  auto mu = 0.1;
+  auto sites = Fermion(N);
   auto ampo = AutoMPO(sites);
-  // OneParticleBasis basis("test_hamlt", N, t, mu);
 
-  // for(int i = 1; i <= N; ++i){
-  //     ampo += -mu, "Nup", i;
-  //     ampo += -mu, "Ndn", i;
-  // }
-
-  for (int i = 1; i < N; ++i) {
-    ampo += -t, "Adag", i, "A", i + 1;
-    ampo += -t, "Adag", i + 1, "A", i;
-    // ampo += -t, "Cdagdn", i, "Cdn", i+1;
-    // ampo += -t, "Cdagdn", i+1, "Cdn", i;
-    // if(i < 2){
-    //     ampo += -t, "Adag", i, "A", i+1;
-    //     ampo += -t, "Adag", i+1, "A", i;
-    // }
-    // else if(i == 2){
-    //     auto k_coef = basis.C_op(i, false);
-    //     auto dag_k_coef = basis.C_op(i, true);
-    //     for(int k; k < N; ++k){
-    //         ampo += -t * get<1>(k_coef[k]), "Adag", i, "A", i+1;
-    //         ampo += -t * get<1>(dag_k_coef[k]), "Adag", i+1, "A", i;
-    //     }
-    // }
-    // else {
-    //     auto k_coef = basis.C_op(i, false);
-    //     auto dag_k_coef = basis.C_op(i, true);
-    //     for(int k; k < N; ++k){
-    //         for (int kp; kp < N; ++kp){
-    //             ampo += -t * get<1>(dag_k_coef[k]) * get<1>(k_coef[kp]),
-    //             "Adag", i, "A", i+1; ampo += -t * get<1>(dag_k_coef[kp]) *
-    //             get<1>(k_coef[k]), "Adag", i+1, "A", i;
-    //         }
-    //     }
-    // }
+  for (int i = 1; i <= N; ++i) {
+    ampo += -mu, "N", i;
   }
 
-  auto H = toMPO(ampo);
-  PrintData(H);
+  for (int i = 1; i < N; ++i) {
+    ampo += -t, "Cdag", i, "C", i + 1;
+    ampo += -t, "Cdag", i + 1, "C", i;
+  }
 
+  // Construct full Hamiltonian matrix from MPO
+  auto H = toMPO(ampo, {"Exact=", true});
   auto T = H(1) * H(2) * H(3);
   auto idxs = inds(T);
-  PrintData(T);
 
   auto [Comb, c] = combiner(idxs[0], idxs[2], idxs[4]);
   auto [Combp, cp] = combiner(idxs[1], idxs[3], idxs[5]);
 
   auto mat = Comb * T * Combp;
-  PrintData(mat);
-
   auto M = Matrix(8, 8);
 
   for (int i = 0; i < 8; i++) {
@@ -106,22 +75,100 @@ TEST_CASE("Check auto MPO in hybrid basis", "[HybridBasis]") {
       M(i, j) = elt(mat, i, j);
     }
   }
-  PrintData(M);
 
+  // Create a random starting MPS
+  auto state = InitState(sites);
+  for (auto i : range1(N)) {
+    if (i % 2 == 1)
+      state.set(i, "1");
+    else
+      state.set(i, "0");
+  }
+  auto psi0 = randomMPS(state);
+
+  // Run DMRG
   auto sweeps = Sweeps(5);
   sweeps.maxdim() = 10, 20, 100, 200, 200;
   sweeps.cutoff() = 1E-8;
-
-  // Create a random starting state
-  // auto state = InitState(sites);
-  // for(auto i : range1(N))
-  //     {
-  //     if(i%2 == 1) state.set(i,"1");
-  //     else         state.set(i,"0");
-  //     }
-  auto psi0 = randomMPS(sites);
-
   auto [energy, psi] = dmrg(H, psi0, sweeps, {"Quiet", true});
 
-  printfln("Ground state energy = %.20f", energy);
+  // Run exact diagonalization
+  Matrix U;
+  Vector ens;
+  diagHermitian(M, U, ens);
+  double min_en = *min_element(ens.begin(), ens.end());
+
+  // Compare ED ground state energy with DMRG
+  CHECK(min_en == Approx(energy).epsilon(1e-12));
+}
+
+TEST_CASE("Check auto MPO in hybrid basis", "[HybridBasis]") {
+  int N = 4;
+  auto t = 0.5;
+  auto mu = 0.1;
+  auto sites = Fermion(N);
+  auto ampo = AutoMPO(sites);
+  OneParticleBasis basis("test_hamlt", N, t, mu);
+
+  for (int i = 1; i <= N; ++i) {
+    ampo += -mu, "N", i;
+  }
+
+  for (int i = 1; i < N; ++i) {
+    if (i < 2) {
+      ampo += -t, "Cdag", i, "C", i + 1;
+      ampo += -t, "Cdag", i + 1, "C", i;
+    } else if (i == 2) {
+      auto k_coef = basis.C_op(i, false);
+      auto dag_k_coef = basis.C_op(i, true);
+      for (int k; k < N; ++k) {
+        ampo += -t * get<1>(k_coef[k]), "Cdag", i, "C", i + 1;
+        ampo += -t * get<1>(dag_k_coef[k]), "Cdag", i + 1, "C", i;
+      }
+    } else {
+      auto k_coef = basis.C_op(i, false);
+      auto dag_k_coef = basis.C_op(i, true);
+      for (int k; k < N; ++k) {
+        for (int kp; kp < N; ++kp) {
+          ampo += -t * get<1>(dag_k_coef[k]) * get<1>(k_coef[kp]), "Cdag", i,
+              "C", i + 1;
+          ampo += -t * get<1>(dag_k_coef[kp]) * get<1>(k_coef[k]), "Cdag",
+              i + 1, "C", i;
+        }
+      }
+    }
+  }
+  auto H = toMPO(ampo);
+
+  auto control_ampo = AutoMPO(sites);
+  for (int i = 1; i <= N; ++i) {
+    control_ampo += -mu, "N", i;
+  }
+
+  for (int i = 1; i < N; ++i) {
+    control_ampo += -t, "Cdag", i, "C", i + 1;
+    control_ampo += -t, "Cdag", i + 1, "C", i;
+  }
+  auto control_H = toMPO(control_ampo);
+
+  // Create a random starting MPS
+  auto state = InitState(sites);
+  for (auto i : range1(N)) {
+    if (i % 2 == 1)
+      state.set(i, "1");
+    else
+      state.set(i, "0");
+  }
+  auto psi0 = randomMPS(state);
+
+  // Run DMRG
+  auto sweeps = Sweeps(5);
+  sweeps.maxdim() = 10, 20, 100, 200, 200;
+  sweeps.cutoff() = 1E-8;
+  // auto [energy, psi] = dmrg(H, psi0, sweeps, {"Quiet", true});
+  auto [control_energy, control_psi] =
+      dmrg(control_H, psi0, sweeps, {"Quiet", true});
+
+  // printfln("Ground state energy = %.20f", energy);
+  printfln("Ground state energy = %.20f", control_energy);
 }
