@@ -1,0 +1,11 @@
+[submodule "ext/itensor"]
+	path = ext/itensor
+	url = https://github.com/ITensor/ITensor.git
+	branch = v3.1.11
+[submodule "ext/itensor.utility"]
+	path = ext/itensor.utility
+	url = https://github.com/chiamin/itensor.utility.git
+[submodule "ext/catch2"]
+	path = ext/catch2
+	url = https://github.com/catchorg/Catch2.git
+	branch = v3.2.0

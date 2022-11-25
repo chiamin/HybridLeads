@@ -5,6 +5,18 @@
 using namespace itensor;
 using namespace std;
 
+
+/**
+ * @brief Generate the tight-binding Hamiltonian.
+ * 
+ * @param L The size of matrix, L x L.
+ * @param t The hopping strength.
+ * @param mu On-site energy.
+ * @param damp_fac 
+ * @param damp_from_right 
+ * @param verbose 
+ * @return Matrix The Hamiltonian.
+ */
 Matrix tight_binding_Hamilt (int L, Real t, Real mu, Real damp_fac=1., bool damp_from_right=true, bool verbose=false)
 {
     cout << "L = " << L << endl;
@@ -24,6 +36,7 @@ Matrix tight_binding_Hamilt (int L, Real t, Real mu, Real damp_fac=1., bool damp
     }
     return H;
 }
+
 
 class OneParticleBasis
 {
@@ -74,15 +87,20 @@ class OneParticleBasis
         Vector _ens;
 };
 
-// Get the operator information in this basis for the operator Cdag_i, where i is the real-space site index.
-// i is 1-index
+/**
+ * @brief Get the operator information in this basis for the operator Cdag_i,
+ *     C_i = \sum_k coef_ik C_k
+ *  Cdag_i = \sum_k coef_ik Cdag_k
+ * 
+ * @param i The real-space site index, 1-index.
+ * @param dag Whether the operator has a dagger or not.
+ * @return vector<tuple<int,auto,bool>> The basis index (k) in ascending order, coefficient,
+ *  and whether the operator has a dagger or not.
+ */
 vector<tuple<int,auto,bool>> OneParticleBasis :: C_op (int i, bool dag) const
 {
     mycheck (i > 0 and i <= nrows(_Uik), "out of range");
 
-    // Cdag_i = \sum_k coef_ik Cdag_k
-    // Return the basis index (k), coefficient, and whether the operator has a dagger or not
-    // k to be returned is 1-index
     auto tmp = _Uik(0,0);
     vector<tuple<int,decltype(tmp),bool>> k_coef_dag;
 
