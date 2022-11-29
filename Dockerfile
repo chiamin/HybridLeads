@@ -27,6 +27,11 @@ RUN cd $PKGDIR/itensor && \
     cp options.mk.sample options.mk && \
     make -e
 
+# Install armadillo
+RUN cd $PKGDIR/armadillo && \
+    cmake . && \
+    make install
+
 # Install Catch2 framework for unit test
 RUN cd $PKGDIR/catch2 && \
     cmake -Bbuild -H. -DBUILD_TESTING=OFF && \
