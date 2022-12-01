@@ -9,3 +9,7 @@
 	path = ext/catch2
 	url = https://github.com/catchorg/Catch2.git
 	branch = v3.2.0
+[submodule "ext/armadillo"]
+	path = ext/armadillo
+	url = https://gitlab.com/conradsnicta/armadillo-code.git
+	branch = 11.4.x

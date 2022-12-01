@@ -13,6 +13,10 @@ set_property(TARGET
     itensor PROPERTY IMPORTED_LOCATION ${ITENSOR_DIR}/lib/libitensor.a
 )
 
+# Include armadillo
+find_package(Armadillo REQUIRED)
+include_directories(${ARMADILLO_INCLUDE_DIRS})
+
 # Define sources and output executable
 add_executable(test.exe
     test_one_particle_basis.cpp
@@ -29,5 +33,7 @@ find_package(Catch2 3 REQUIRED)
 # Link executable with libraries
 set(ITENSOR_LIBFLAGS "-lpthread -L/usr/lib -lblas -llapack -fopenmp")
 target_link_libraries(test.exe
-    PRIVATE itensor "${ITENSOR_LIBFLAGS}" Catch2::Catch2WithMain
+    PRIVATE itensor "${ITENSOR_LIBFLAGS}"
+    ${ARMADILLO_LIBRARIES}
+    Catch2::Catch2WithMain
 )

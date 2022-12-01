@@ -1,3 +1,4 @@
+#include <armadillo>
 #include <catch2/catch_all.hpp>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -11,17 +12,14 @@ using namespace Catch;
 TEST_CASE("Check matrix elements of tight-binding Hamiltonian",
           "[tight_binding_Hamilt]") {
   int mat_dim = 4;
-  auto mat = tight_binding_Hamilt(mat_dim, 0.5, 1.);
-  float expected_mat[4][4] = {{-1.0, -0.5, 0.0, 0.0},
-                              {-0.5, -1.0, -0.5, 0.0},
-                              {0.0, -0.5, -1.0, -0.5},
-                              {0.0, 0.0, -0.5, -1.0}};
-
-  for (int i = 0; i < mat_dim; i++) {
-    for (int j = 0; j < mat_dim; j++) {
-      CHECK(mat(i, j) == Approx(expected_mat[i][j]).epsilon(1e-12));
-    }
-  }
+  auto ham_elems = tight_binding_Hamilt(mat_dim, 0.5, 1.);
+  double expected_elems[4][4] = {{-1.0, -0.5, 0.0, 0.0},
+                                 {-0.5, -1.0, -0.5, 0.0},
+                                 {0.0, -0.5, -1.0, -0.5},
+                                 {0.0, 0.0, -0.5, -1.0}};
+  arma::mat ham_mat(&ham_elems(0, 0), mat_dim, mat_dim);
+  arma::mat expected_mat(&expected_elems[0][0], mat_dim, mat_dim);
+  CHECK(approx_equal(ham_mat, expected_mat, "absdiff", 1e-12));
 }
 
 TEST_CASE("Check one particle basis", "[OneParticleBasis]") {
@@ -43,27 +41,29 @@ TEST_CASE("Check one particle basis", "[OneParticleBasis]") {
   }
 }
 
-TEST_CASE("Check auto MPO in real space basis", "[RealSpaceBasis]") {
+TEST_CASE("Check AutoMPO in real space basis", "[RealSpaceBasis]") {
   int N = 3;
   auto t = 0.5;
   auto mu = 0.1;
   auto sites = Fermion(N);
   auto ampo = AutoMPO(sites);
 
+  // Construct AutoMPO
   for (int i = 1; i <= N; ++i) {
     ampo += -mu, "N", i;
   }
-
   for (int i = 1; i < N; ++i) {
     ampo += -t, "Cdag", i, "C", i + 1;
     ampo += -t, "Cdag", i + 1, "C", i;
   }
+  auto H = toMPO(ampo, {"Exact=", true});
 
   // Construct full Hamiltonian matrix from MPO
-  auto H = toMPO(ampo, {"Exact=", true});
   auto T = H(1) * H(2) * H(3);
   auto idxs = inds(T);
 
+  // Note that the order of indices is not taken care by ITensor
+  // See: https://github.com/chiamin/HybridLeads/issues/4
   auto [Comb, c] = combiner(idxs[0], idxs[2], idxs[4]);
   auto [Combp, cp] = combiner(idxs[1], idxs[3], idxs[5]);
 
@@ -102,54 +102,48 @@ TEST_CASE("Check auto MPO in real space basis", "[RealSpaceBasis]") {
   CHECK(min_en == Approx(energy).epsilon(1e-12));
 }
 
-TEST_CASE("Check auto MPO in hybrid basis", "[HybridBasis]") {
-  int N = 4;
+TEST_CASE("Check AutoMPO in hybrid basis", "[HybridBasis]") {
+  int N = 8;
   auto t = 0.5;
   auto mu = 0.1;
   auto sites = Fermion(N);
   auto ampo = AutoMPO(sites);
-  OneParticleBasis basis("test_hamlt", N, t, mu);
 
-  for (int i = 1; i <= N; ++i) {
-    ampo += -mu, "N", i;
-  }
+  // Prepare the basis transformation
+  auto elems = tight_binding_Hamilt(N, t, mu);
+  arma::mat ham_mat(&elems(0, 0), N, N);
+  arma::mat Uik = arma::eye(N, N);
+  arma::vec evals;
+  arma::mat evecs;
+  arma::mat sub_ham_mat = ham_mat.submat(0, 0, N / 2 - 1, N / 2 - 1);
+  eig_sym(evals, evecs, sub_ham_mat);
+  Uik.submat(0, 0, N / 2 - 1, N / 2 - 1) = evecs;
+  arma::mat hybrid_ham_mat = Uik.t() * ham_mat * Uik;
 
-  for (int i = 1; i < N; ++i) {
-    if (i < 2) {
-      ampo += -t, "Cdag", i, "C", i + 1;
-      ampo += -t, "Cdag", i + 1, "C", i;
-    } else if (i == 2) {
-      auto k_coef = basis.C_op(i, false);
-      auto dag_k_coef = basis.C_op(i, true);
-      for (int k; k < N; ++k) {
-        ampo += -t * get<1>(k_coef[k]), "Cdag", i, "C", i + 1;
-        ampo += -t * get<1>(dag_k_coef[k]), "Cdag", i + 1, "C", i;
-      }
-    } else {
-      auto k_coef = basis.C_op(i, false);
-      auto dag_k_coef = basis.C_op(i, true);
-      for (int k; k < N; ++k) {
-        for (int kp; kp < N; ++kp) {
-          ampo += -t * get<1>(dag_k_coef[k]) * get<1>(k_coef[kp]), "Cdag", i,
-              "C", i + 1;
-          ampo += -t * get<1>(dag_k_coef[kp]) * get<1>(k_coef[k]), "Cdag",
-              i + 1, "C", i;
-        }
+  // Construct AutoMPO in hybrid basis
+  // Note that AutoMPO uses 1-index
+  for (int i = 0; i < N; ++i) {
+    for (int j = 0; j < N; ++j) {
+      double coef = hybrid_ham_mat(i, j);
+      if (i == j) {
+        ampo += coef, "N", i + 1;
+      } else {
+        ampo += coef, "Cdag", i + 1, "C", j + 1;
       }
     }
   }
   auto H = toMPO(ampo);
 
-  auto control_ampo = AutoMPO(sites);
+  // Construct AutoMPO in real-space basis
+  auto expected_ampo = AutoMPO(sites);
   for (int i = 1; i <= N; ++i) {
-    control_ampo += -mu, "N", i;
+    expected_ampo += -mu, "N", i;
   }
-
   for (int i = 1; i < N; ++i) {
-    control_ampo += -t, "Cdag", i, "C", i + 1;
-    control_ampo += -t, "Cdag", i + 1, "C", i;
+    expected_ampo += -t, "Cdag", i, "C", i + 1;
+    expected_ampo += -t, "Cdag", i + 1, "C", i;
   }
-  auto control_H = toMPO(control_ampo);
+  auto expected_H = toMPO(expected_ampo);
 
   // Create a random starting MPS
   auto state = InitState(sites);
@@ -161,14 +155,12 @@ TEST_CASE("Check auto MPO in hybrid basis", "[HybridBasis]") {
   }
   auto psi0 = randomMPS(state);
 
-  // Run DMRG
+  // Run DMRG in 2 bases respectively
   auto sweeps = Sweeps(5);
   sweeps.maxdim() = 10, 20, 100, 200, 200;
   sweeps.cutoff() = 1E-8;
-  // auto [energy, psi] = dmrg(H, psi0, sweeps, {"Quiet", true});
-  auto [control_energy, control_psi] =
-      dmrg(control_H, psi0, sweeps, {"Quiet", true});
-
-  // printfln("Ground state energy = %.20f", energy);
-  printfln("Ground state energy = %.20f", control_energy);
+  auto [energy, psi] = dmrg(H, psi0, sweeps, {"Quiet", true});
+  auto [expected_energy, expected_psi] =
+      dmrg(expected_H, psi0, sweeps, {"Quiet", true});
+  CHECK(energy == Approx(expected_energy).epsilon(1e-12));
 }
