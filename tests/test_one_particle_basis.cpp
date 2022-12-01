@@ -99,7 +99,7 @@ TEST_CASE("Check AutoMPO in real space basis", "[RealSpaceBasis]") {
   double min_en = *min_element(ens.begin(), ens.end());
 
   // Compare ED ground state energy with DMRG
-  CHECK(min_en == Approx(energy).epsilon(1e-12));
+  CHECK(min_en == Approx(energy).epsilon(1e-8));
 }
 
 TEST_CASE("Check AutoMPO in hybrid basis", "[HybridBasis]") {
@@ -156,11 +156,11 @@ TEST_CASE("Check AutoMPO in hybrid basis", "[HybridBasis]") {
   auto psi0 = randomMPS(state);
 
   // Run DMRG in 2 bases respectively
-  auto sweeps = Sweeps(5);
+  auto sweeps = Sweeps(8);
   sweeps.maxdim() = 10, 20, 100, 200, 200;
-  sweeps.cutoff() = 1E-8;
+  sweeps.cutoff() = 1E-10;
   auto [energy, psi] = dmrg(H, psi0, sweeps, {"Quiet", true});
   auto [expected_energy, expected_psi] =
       dmrg(expected_H, psi0, sweeps, {"Quiet", true});
-  CHECK(energy == Approx(expected_energy).epsilon(1e-12));
+  CHECK(energy == Approx(expected_energy).epsilon(1e-8));
 }
