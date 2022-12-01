@@ -9,7 +9,7 @@ Installation
 
     * Pull the image:
     ```
-    docker pull ghcr.io/chiamin/hybridleads:main
+    docker pull ghcr.io/chiamin/hybridleads:latest
     ```
     * Build the image by yourself:
     ```
@@ -17,9 +17,9 @@ Installation
     ```
     * Run the container:
     ```
-    docker run --rm -it -v $(pwd)/tests:/home/tests ghcr.io/chiamin/hybridleads:main
+    docker run --rm -it -v $(pwd)/tests:/home/tests ghcr.io/chiamin/hybridleads:latest
     ```
-    **Note**: replace the image name `ghcr.io/chiamin/hybridleads:main` by `hybridleads` if you're building the image by yourself.
+    **Note**: replace the image name `ghcr.io/chiamin/hybridleads:latest` by `hybridleads` if you're building the image by yourself.
     * Package version:
       * `gcc 12.2.0`
       * `c++17`
