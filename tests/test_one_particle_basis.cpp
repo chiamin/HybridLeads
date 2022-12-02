@@ -12,11 +12,13 @@ using namespace Catch;
 TEST_CASE("Check matrix elements of tight-binding Hamiltonian",
           "[tight_binding_Hamilt]") {
   int mat_dim = 4;
-  auto ham_elems = tight_binding_Hamilt(mat_dim, 0.5, 1.);
-  double expected_elems[4][4] = {{-1.0, -0.5, 0.0, 0.0},
-                                 {-0.5, -1.0, -0.5, 0.0},
-                                 {0.0, -0.5, -1.0, -0.5},
-                                 {0.0, 0.0, -0.5, -1.0}};
+  auto t = GENERATE(0.5, 1.0);
+  auto mu = GENERATE(0.0, 0.1);
+  auto ham_elems = tight_binding_Hamilt(mat_dim, t, mu);
+  double expected_elems[mat_dim][mat_dim] = {{-mu, -t, 0.0, 0.0},
+                                             {-t, -mu, -t, 0.0},
+                                             {0.0, -t, -mu, -t},
+                                             {0.0, 0.0, -t, -mu}};
   arma::mat ham_mat(&ham_elems(0, 0), mat_dim, mat_dim);
   arma::mat expected_mat(&expected_elems[0][0], mat_dim, mat_dim);
   CHECK(approx_equal(ham_mat, expected_mat, "absdiff", 1e-12));
@@ -27,14 +29,12 @@ TEST_CASE("Check one particle basis", "[OneParticleBasis]") {
   OneParticleBasis basis("test_hamlt", mat_dim, 0.5, 1.);
 
   auto k_coef = basis.C_op(3, false);
-
   for (auto& tuple : k_coef) {
     std::cout << get<0>(tuple) << " " << get<1>(tuple) << " " << get<2>(tuple)
               << std::endl;
   }
 
   k_coef = basis.C_op(4, false);
-
   for (auto& tuple : k_coef) {
     std::cout << get<0>(tuple) << " " << get<1>(tuple) << " " << get<2>(tuple)
               << std::endl;
@@ -44,7 +44,7 @@ TEST_CASE("Check one particle basis", "[OneParticleBasis]") {
 TEST_CASE("Check AutoMPO in real space basis", "[RealSpaceBasis]") {
   int N = 3;
   auto t = 0.5;
-  auto mu = 0.1;
+  auto mu = GENERATE(0.0, 0.1);
   auto sites = Fermion(N);
   auto ampo = AutoMPO(sites);
 
@@ -103,9 +103,9 @@ TEST_CASE("Check AutoMPO in real space basis", "[RealSpaceBasis]") {
 }
 
 TEST_CASE("Check AutoMPO in hybrid basis", "[HybridBasis]") {
-  int N = 8;
+  int N = GENERATE(8, 16, 20);
   auto t = 0.5;
-  auto mu = 0.1;
+  auto mu = GENERATE(0.0, 0.1);
   auto sites = Fermion(N);
   auto ampo = AutoMPO(sites);
 
