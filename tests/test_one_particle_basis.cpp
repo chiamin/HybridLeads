@@ -109,91 +109,56 @@ TEST_CASE("Check AutoMPO in hybrid basis", "[HybridBasis]") {
   auto sites = Fermion(N);
   auto ampo = AutoMPO(sites);
 
-  // Prepare the basis transformation
-  auto elems = tight_binding_Hamilt(N, t, mu);
-  arma::mat ham_mat(&elems(0, 0), N, N);
-  arma::mat Uik = arma::eye(N, N);
-  arma::vec evals;
-  arma::mat evecs;
-  arma::mat sub_ham_mat = ham_mat.submat(0, 0, N / 2 - 1, N / 2 - 1);
-  eig_sym(evals, evecs, sub_ham_mat);
-  Uik.submat(0, 0, N / 2 - 1, N / 2 - 1) = evecs;
-  arma::mat hybrid_ham_mat = Uik.t() * ham_mat * Uik;
-
   // Construct AutoMPO in hybrid basis
-  // Note that AutoMPO uses 1-index
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < N; ++j) {
-      double coef = hybrid_ham_mat(i, j);
-      if (i == j) {
-        ampo += coef, "N", i + 1;
-      } else {
-        ampo += coef, "Cdag", i + 1, "C", j + 1;
+  // I. 1st approach
+  SECTION("Use basis transformation") {
+    auto elems = tight_binding_Hamilt(N, t, mu);
+    arma::mat ham_mat(&elems(0, 0), N, N);
+    arma::mat Uik = arma::eye(N, N);
+    arma::vec evals;
+    arma::mat evecs;
+    arma::mat sub_ham_mat = ham_mat.submat(0, 0, N / 2 - 1, N / 2 - 1);
+    eig_sym(evals, evecs, sub_ham_mat);
+    Uik.submat(0, 0, N / 2 - 1, N / 2 - 1) = evecs;
+    arma::mat hybrid_ham_mat = Uik.t() * ham_mat * Uik;
+
+    // Note that AutoMPO uses 1-index
+    for (int i = 0; i < N; ++i) {
+      for (int j = 0; j < N; ++j) {
+        double coef = hybrid_ham_mat(i, j);
+        if (i == j) {
+          ampo += coef, "N", i + 1;
+        } else {
+          ampo += coef, "Cdag", i + 1, "C", j + 1;
+        }
       }
     }
   }
-  auto H = toMPO(ampo);
 
-  // Construct AutoMPO in real-space basis
-  auto expected_ampo = AutoMPO(sites);
-  for (int i = 1; i <= N; ++i) {
-    expected_ampo += -mu, "N", i;
+  // II. 2nd approach
+  SECTION("Direct construction of AutoMPO with OneParticleBasis::C_op") {
+    OneParticleBasis basis("sub_sys", N / 2, t, mu);
+    // 1. The k-space part
+    for (int k = 1; k <= N / 2; ++k) {
+      auto coef = basis.en(k);
+      ampo += coef, "N", k;
+    }
+    // 2. The mixing part
+    auto coef = basis.C_op(N / 2, false);
+    for (int k = 1; k <= N / 2; ++k) {
+      ampo += -t * get<1>(coef[k - 1]), "Cdag", k, "C", N / 2 + 1;
+      ampo += -t * get<1>(coef[k - 1]), "Cdag", N / 2 + 1, "C", k;
+    }
+    // 3. The real-space part
+    for (int i = N / 2 + 1; i <= N; ++i) {
+      ampo += -mu, "N", i;
+    }
+    for (int i = N / 2 + 1; i < N; ++i) {
+      ampo += -t, "Cdag", i, "C", i + 1;
+      ampo += -t, "Cdag", i + 1, "C", i;
+    }
   }
-  for (int i = 1; i < N; ++i) {
-    expected_ampo += -t, "Cdag", i, "C", i + 1;
-    expected_ampo += -t, "Cdag", i + 1, "C", i;
-  }
-  auto expected_H = toMPO(expected_ampo);
 
-  // Create a random starting MPS
-  auto state = InitState(sites);
-  for (auto i : range1(N)) {
-    if (i % 2 == 1)
-      state.set(i, "1");
-    else
-      state.set(i, "0");
-  }
-  auto psi0 = randomMPS(state);
-
-  // Run DMRG in 2 bases respectively
-  auto sweeps = Sweeps(8);
-  sweeps.maxdim() = 10, 20, 100, 200, 200;
-  sweeps.cutoff() = 1E-10;
-  auto [energy, psi] = dmrg(H, psi0, sweeps, {"Quiet", true});
-  auto [expected_energy, expected_psi] =
-      dmrg(expected_H, psi0, sweeps, {"Quiet", true});
-  CHECK(energy == Approx(expected_energy).epsilon(1e-8));
-}
-
-TEST_CASE("Check AutoMPO in hybrid basis with OneParticleBasis::C_op",
-          "[HybridBasis2]") {
-  int N = GENERATE(8, 16, 20);
-  auto t = 0.5;
-  auto mu = GENERATE(0.0, 0.1);
-  auto sites = Fermion(N);
-  auto ampo = AutoMPO(sites);
-  OneParticleBasis basis("sub_sys", N / 2, t, mu);
-
-  // Construct AutoMPO in hybrid basis
-  // 1. The k-space part
-  for (int k = 1; k <= N / 2; ++k) {
-    auto coef = basis.en(k);
-    ampo += coef, "N", k;
-  }
-  // 2. The mixing part
-  auto coef = basis.C_op(N / 2, false);
-  for (int k = 1; k <= N / 2; ++k) {
-    ampo += -t * get<1>(coef[k - 1]), "Cdag", k, "C", N / 2 + 1;
-    ampo += -t * get<1>(coef[k - 1]), "Cdag", N / 2 + 1, "C", k;
-  }
-  // 3. The real-space part
-  for (int i = N / 2 + 1; i <= N; ++i) {
-    ampo += -mu, "N", i;
-  }
-  for (int i = N / 2 + 1; i < N; ++i) {
-    ampo += -t, "Cdag", i, "C", i + 1;
-    ampo += -t, "Cdag", i + 1, "C", i;
-  }
   auto H = toMPO(ampo);
 
   // Construct AutoMPO in real-space basis
