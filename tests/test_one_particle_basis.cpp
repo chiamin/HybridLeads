@@ -90,7 +90,7 @@ TEST_CASE("Check AutoMPO in real space basis", "[RealSpaceBasis]") {
   auto sweeps = Sweeps(5);
   sweeps.maxdim() = 10, 20, 100, 200, 200;
   sweeps.cutoff() = 1E-8;
-  auto [energy, psi] = dmrg(H, psi0, sweeps, {"Quiet", true});
+  auto [energy, psi] = dmrg(H, psi0, sweeps, {"Silent", true});
 
   // Run exact diagonalization
   Matrix U;
@@ -186,8 +186,8 @@ TEST_CASE("Check AutoMPO in hybrid basis", "[HybridBasis]") {
   auto sweeps = Sweeps(8);
   sweeps.maxdim() = 10, 20, 100, 200, 200;
   sweeps.cutoff() = 1E-10;
-  auto [energy, psi] = dmrg(H, psi0, sweeps, {"Quiet", true});
+  auto [energy, psi] = dmrg(H, psi0, sweeps, {"Silent", true});
   auto [expected_energy, expected_psi] =
-      dmrg(expected_H, psi0, sweeps, {"Quiet", true});
+      dmrg(expected_H, psi0, sweeps, {"Silent", true});
   CHECK(energy == Approx(expected_energy).epsilon(1e-8));
 }
