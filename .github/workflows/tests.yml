@@ -13,7 +13,7 @@ jobs:
       image: ghcr.io/${{ github.actor }}/hybridleads:main
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Set up building directory
         run: |
           echo "build_dir=tests/build" >> $GITHUB_ENV
@@ -25,4 +25,6 @@ jobs:
 
       - name: Unit Test
         run: |
-          ./${{ env.build_dir }}/test.exe
+          for filename in ${{ env.build_dir }}/test_*.exe; do
+            ./"$filename"
+          done

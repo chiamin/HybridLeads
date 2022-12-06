@@ -1,6 +1,11 @@
 #ifndef __SORTBASIS_H_CMC__
 #define __SORTBASIS_H_CMC__
 
+#include "itensor/all.h"
+
+using namespace itensor;
+using namespace std;
+
 using ToGlobDict =
     map<pair<string, int>, int>;  // {partition, ki} -> ortical index
 using ToLocDict =
@@ -47,8 +52,13 @@ vector<SortInfo> get_sort_info(const BasisT& basis, const Bases&... bases) {
 }
 // ----
 
-// Input: arbitrary number of bases
-// Combine all the basis states and sort by the energies
+/**
+ * @brief Combine all the basis states and sort by the energies
+ *
+ * @tparam Bases
+ * @param bases Arbitrary number of bases
+ * @return vector<SortInfo>
+ */
 template <typename... Bases>
 vector<SortInfo> sort_by_energy(const Bases&... bases) {
   vector<SortInfo> orbs = get_sort_info(bases...);

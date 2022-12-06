@@ -1,7 +1,9 @@
 #ifndef __ONEPARTICLEBASIS_H_CMC__
 #define __ONEPARTICLEBASIS_H_CMC__
+
 #include "GeneralUtility.h"
 #include "itensor/all.h"
+
 using namespace itensor;
 using namespace std;
 
@@ -10,11 +12,12 @@ using namespace std;
  *
  * @param L The size of matrix, L x L.
  * @param t The hopping strength.
- * @param mu On-site energy.
- * @param damp_fac
+ * @param mu The on-site energy.
+ * @param damp_fac The base of power law hopping. Default to 1 as taking no
+ * effect.
  * @param damp_from_right
- * @param verbose
- * @return Matrix The Hamiltonian.
+ * @param verbose Print out the matrix elements.
+ * @return Matrix The Hamiltonian matrix, which is tridiagonal.
  */
 Matrix tight_binding_Hamilt(int L, Real t, Real mu, Real damp_fac = 1.,
                             bool damp_from_right = true, bool verbose = false) {
