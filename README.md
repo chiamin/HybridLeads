@@ -69,4 +69,5 @@ Then, for instance, one can run the executable ```itdvp/itdvp.exe``` by
 ```
 ./itdvp.exe input
 ```
-with the parameters been assigned in ```itdvp/input```.
+with the parameters been assigned in ```itdvp/input```,
+see [here](https://www.itensor.org/docs.cgi?vers=cppv3&page=formulas/input) for the more detailed documentation on input files.
