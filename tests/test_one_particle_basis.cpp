@@ -184,16 +184,7 @@ TEST_CASE("Check AutoMPO in hybrid basis", "[HybridBasis]") {
     }
   }
 
-  // Without the arg {"Exact=", true}, the approaximated MPO will have equal
-  // bond dim, otherwise the bond dim will be different on every bonds. The
-  // element-wise conparison only make sence when 2 MPO tensors have same bond
-  // dim.
   auto H = toMPO(ampo);
-  CHECK(ALLCLOSE(H(2), H(3)) == false);                  // k-space
-  CHECK(ALLCLOSE(H(N / 2 - 1), H(N / 2)) == false);      // k-space
-  CHECK(ALLCLOSE(H(N / 2), H(N / 2 + 1)) == false);      // contact
-  CHECK(ALLCLOSE(H(N / 2 + 1), H(N / 2 + 2)) == false);  // real-space
-  CHECK(ALLCLOSE(H(N - 2), H(N - 1)) == true);           // real-space
 
   // Construct AutoMPO in real-space basis
   auto expected_ampo = AutoMPO(sites);
@@ -224,4 +215,70 @@ TEST_CASE("Check AutoMPO in hybrid basis", "[HybridBasis]") {
   auto [expected_energy, expected_psi] =
       dmrg(expected_H, psi0, sweeps, {"Silent", true});
   CHECK(energy == Approx(expected_energy).epsilon(1e-8));
+}
+
+/**
+ * @brief Without the arg {"Exact=", true}, the approaximated MPO will have
+ * equal bond dim, otherwise the bond dim will be different on every bonds.
+ * Note that element-wise conparison only make sence when 2 MPO tensors have
+ * same bond dim. See also https://github.com/chiamin/HybridLeads/issues/9.
+ */
+TEST_CASE("Check toMPO argument Exact", "[toMPOExact]") {
+  int N = GENERATE(10, 16, 20);
+  auto t = 0.5;
+  auto mu = GENERATE(0.0, 0.1);
+  auto sites = Fermion(N);
+
+  // Construct AutoMPO in real-space basis
+  auto expected_ampo = AutoMPO(sites);
+  for (int i = 1; i <= N; ++i) {
+    expected_ampo += -mu, "N", i;
+  }
+  for (int i = 1; i < N; ++i) {
+    expected_ampo += -t, "Cdag", i, "C", i + 1;
+    expected_ampo += -t, "Cdag", i + 1, "C", i;
+  }
+  auto expected_H = toMPO(expected_ampo, {"Exact=", true});  // <--- with Exact
+
+  // Construct AutoMPO in hybrid basis
+  auto ampo = AutoMPO(sites);
+  OneParticleBasis basis("sub_sys", N / 2, t, mu);
+  // 1. The k-space part
+  for (int k = 1; k <= N / 2; ++k) {
+    auto coef = basis.en(k);
+    ampo += coef, "N", k;
+  }
+  // 2. The mixing part
+  auto coef = basis.C_op(N / 2, false);
+  for (int k = 1; k <= N / 2; ++k) {
+    ampo += -t * get<1>(coef[k - 1]), "Cdag", k, "C", N / 2 + 1;
+    ampo += -t * get<1>(coef[k - 1]), "Cdag", N / 2 + 1, "C", k;
+  }
+  // 3. The real-space part
+  for (int i = N / 2 + 1; i <= N; ++i) {
+    ampo += -mu, "N", i;
+  }
+  for (int i = N / 2 + 1; i < N; ++i) {
+    ampo += -t, "Cdag", i, "C", i + 1;
+    ampo += -t, "Cdag", i + 1, "C", i;
+  }
+
+  SECTION("toMPO without argument Exact") {
+    auto H = toMPO(ampo);
+    CHECK(ALLCLOSE(H(2), H(3)) == false);                  // k-space
+    CHECK(ALLCLOSE(H(N / 2 - 1), H(N / 2)) == false);      // k-space
+    CHECK(ALLCLOSE(H(N / 2), H(N / 2 + 1)) == false);      // contact
+    CHECK(ALLCLOSE(H(N / 2 + 1), H(N / 2 + 2)) == false);  // real-space
+    CHECK(ALLCLOSE(H(N - 2), H(N - 1)) == true);           // real-space
+  }
+
+  SECTION("toMPO with argument Exact") {
+    auto H = toMPO(ampo, {"Exact=", true});
+    // TODO: the following 2 checks will fail, even bond dim mismatch. why?
+    // CHECK(ALLCLOSE(H(N / 2 + 1), expected_H(N / 2 + 1)) == true);
+    // CHECK(ALLCLOSE(H(N / 2 + 2), expected_H(N / 2 + 2)) == true);
+    CHECK(ALLCLOSE(H(N / 2 + 3), expected_H(N / 2 + 3)) == true);  // real-space
+    CHECK(ALLCLOSE(H(N - 1), expected_H(N - 1)) == true);          // real-space
+    CHECK(ALLCLOSE(H(N), expected_H(N)) == true);                  // real-space
+  }
 }
