@@ -9,6 +9,31 @@
 using namespace itensor;
 using namespace Catch;
 
+/**
+ * @brief Element-wise comparison of 2 given itensors.
+ *
+ * @param t1
+ * @param t2
+ * @param atol
+ * @return bool
+ */
+bool ALLCLOSE(ITensor t1, ITensor t2, double atol = 1e-12) {
+  REQUIRE(order(t1) == order(t2));
+  auto check_close_zero = [&atol](Real r) {
+    if (abs(r) > atol) {
+      throw std::logic_error("Two tensors are not close.");
+    }
+  };
+  try {
+    t2.replaceInds(inds(t2), inds(t1));
+    auto diff_t = t1 - t2;
+    diff_t.visit(check_close_zero);  // visit() only accepts lambda func
+  } catch (std::logic_error& e) {
+    return false;
+  }
+  return true;
+}
+
 TEST_CASE("Check matrix elements of tight-binding Hamiltonian",
           "[tight_binding_Hamilt]") {
   int mat_dim = 4;
@@ -159,7 +184,16 @@ TEST_CASE("Check AutoMPO in hybrid basis", "[HybridBasis]") {
     }
   }
 
+  // Without the arg {"Exact=", true}, the approaximated MPO will have equal
+  // bond dim, otherwise the bond dim will be different on every bonds. The
+  // element-wise conparison only make sence when 2 MPO tensors have same bond
+  // dim.
   auto H = toMPO(ampo);
+  CHECK(ALLCLOSE(H(2), H(3)) == false);                  // k-space
+  CHECK(ALLCLOSE(H(N / 2 - 1), H(N / 2)) == false);      // k-space
+  CHECK(ALLCLOSE(H(N / 2), H(N / 2 + 1)) == false);      // contact
+  CHECK(ALLCLOSE(H(N / 2 + 1), H(N / 2 + 2)) == false);  // real-space
+  CHECK(ALLCLOSE(H(N - 2), H(N - 1)) == true);           // real-space
 
   // Construct AutoMPO in real-space basis
   auto expected_ampo = AutoMPO(sites);
