@@ -265,11 +265,14 @@ TEST_CASE("Check toMPO argument Exact", "[toMPOExact]") {
 
   SECTION("toMPO without argument Exact") {
     auto H = toMPO(ampo);
-    CHECK(ALLCLOSE(H(2), H(3)) == false);                  // k-space
-    CHECK(ALLCLOSE(H(N / 2 - 1), H(N / 2)) == false);      // k-space
+    for (int i = 2; i <= N / 2 - 1; ++i) {
+      CHECK(ALLCLOSE(H(i), H(i + 1)) == false);  // k-space part
+    }
     CHECK(ALLCLOSE(H(N / 2), H(N / 2 + 1)) == false);      // contact
     CHECK(ALLCLOSE(H(N / 2 + 1), H(N / 2 + 2)) == false);  // real-space
-    CHECK(ALLCLOSE(H(N - 2), H(N - 1)) == true);           // real-space
+    for (int i = N / 2 + 2; i <= N - 2; ++i) {
+      CHECK(ALLCLOSE(H(i), H(i + 1)) == true);  // real-space part
+    }
   }
 
   SECTION("toMPO with argument Exact") {
@@ -277,8 +280,8 @@ TEST_CASE("Check toMPO argument Exact", "[toMPOExact]") {
     // TODO: the following 2 checks will fail, even bond dim mismatch. why?
     // CHECK(ALLCLOSE(H(N / 2 + 1), expected_H(N / 2 + 1)) == true);
     // CHECK(ALLCLOSE(H(N / 2 + 2), expected_H(N / 2 + 2)) == true);
-    CHECK(ALLCLOSE(H(N / 2 + 3), expected_H(N / 2 + 3)) == true);  // real-space
-    CHECK(ALLCLOSE(H(N - 1), expected_H(N - 1)) == true);          // real-space
-    CHECK(ALLCLOSE(H(N), expected_H(N)) == true);                  // real-space
+    for (int i = N / 2 + 3; i <= N; ++i) {
+      CHECK(ALLCLOSE(H(i), expected_H(i)) == true);  // real-space part
+    }
   }
 }
