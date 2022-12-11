@@ -238,7 +238,6 @@ TEST_CASE("Check toMPO argument Exact", "[toMPOExact]") {
     expected_ampo += -t, "Cdag", i, "C", i + 1;
     expected_ampo += -t, "Cdag", i + 1, "C", i;
   }
-  auto expected_H = toMPO(expected_ampo, {"Exact=", true});  // <--- with Exact
 
   // Construct AutoMPO in hybrid basis
   auto ampo = AutoMPO(sites);
@@ -265,6 +264,7 @@ TEST_CASE("Check toMPO argument Exact", "[toMPOExact]") {
 
   SECTION("toMPO without argument Exact") {
     auto H = toMPO(ampo);
+    auto expected_H = toMPO(expected_ampo);
     for (int i = 2; i <= N / 2 - 1; ++i) {
       CHECK(ALLCLOSE(H(i), H(i + 1)) == false);  // k-space part
     }
@@ -273,10 +273,19 @@ TEST_CASE("Check toMPO argument Exact", "[toMPOExact]") {
     for (int i = N / 2 + 2; i <= N - 2; ++i) {
       CHECK(ALLCLOSE(H(i), H(i + 1)) == true);  // real-space part
     }
+    for (int i = 1; i <= N / 2 + 1; ++i) {
+      // k-space part + 1st one in real-space part
+      CHECK(ALLCLOSE(H(i), expected_H(i)) == false);
+    }
+    for (int i = N / 2 + 2; i <= N; ++i) {
+      // rest of the real-space part
+      CHECK(ALLCLOSE(H(i), expected_H(i)) == true);
+    }
   }
 
   SECTION("toMPO with argument Exact") {
     auto H = toMPO(ampo, {"Exact=", true});
+    auto expected_H = toMPO(expected_ampo, {"Exact=", true});
     // TODO: the following 2 checks will fail, even bond dim mismatch. why?
     // CHECK(ALLCLOSE(H(N / 2 + 1), expected_H(N / 2 + 1)) == true);
     // CHECK(ALLCLOSE(H(N / 2 + 2), expected_H(N / 2 + 2)) == true);
