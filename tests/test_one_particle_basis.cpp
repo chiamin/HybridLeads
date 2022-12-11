@@ -281,6 +281,11 @@ TEST_CASE("Check toMPO argument Exact", "[toMPOExact]") {
       // rest of the real-space part
       CHECK(ALLCLOSE(H(i), expected_H(i)) == true);
     }
+    // Check that coef Uik is equally-partitioned into H(N/2) and H(N/2 + 1)
+    CHECK(elt(H(N / 2), 1, 2, 2, 3) ==
+          Approx(elt(H(N / 2 + 1), 1, 2, 2, 3)).epsilon(1e-12));
+    CHECK(elt(H(N / 2), 2, 1, 2, 4) ==
+          Approx(elt(H(N / 2 + 1), 2, 1, 2, 4)).epsilon(1e-12));
   }
 
   SECTION("toMPO with argument Exact") {
