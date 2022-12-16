@@ -10,9 +10,11 @@ using namespace itensor;
 using namespace std;
 
 /**
- * @brief Collecting operator information in the new basis.
- * C(i1,dag1) * C(i2,dag2) = \sum_k1 coef_i1,k1 C(k1,dag'1) * \sum_k2 coef_i2,k2
- * C(k2,dag'2)
+ * @brief Helper function for collecting operator information in the new basis.
+ * @f{eqnarray*}
+ *  C(i1,dag1) * C(i2,dag2) = \sum_k1 coef_i1,k1 C(k1,dag'1) * \sum_k2
+ * coef_i2,k2 C(k2,dag'2)
+ * @f}
  *
  * @tparam Basis1
  * @tparam Basis2
@@ -23,8 +25,8 @@ using namespace std;
  * @param dag1
  * @param dag2
  * @param cutoff
- * @return vector <tuple <auto,int,bool,int,bool>> vector of (coef, k1, dag'1,
- * k2, dag'2), where \f$coef = coef_{i1,k1} * coef_{i2,k2}\f$.
+ * @returns vector <tuple <auto,int,bool,int,bool>> - vector of (coef, k1,
+ * dag'1, k2, dag'2), where \f$coef = coef_{i1,k1} * coef_{i2,k2}\f$.
  */
 template <typename Basis1, typename Basis2>
 vector<tuple<auto, int, bool, int, bool>> quadratic_operator_new(
@@ -185,7 +187,7 @@ void add_SC(AutoMPO& ampo, const Basis1& basis1, const Basis2& basis2, int i1,
  * @param sites
  * @param para
  * @param to_glob
- * @return AutoMPO
+ * @returns AutoMPO
  */
 template <typename BasisL, typename BasisR, typename BasisS, typename BasisC,
           typename SiteType, typename Para>
@@ -240,7 +242,7 @@ AutoMPO get_ampo_Kitaev_chain(const BasisL& leadL, const BasisR& leadR,
 }
 
 /**
- * @brief Get AutoMPO object for tight-binding model
+ * @brief Get AutoMPO object for tight-binding model.
  *
  * @tparam BasisL
  * @tparam BasisR
@@ -253,7 +255,7 @@ AutoMPO get_ampo_Kitaev_chain(const BasisL& leadL, const BasisR& leadR,
  * @param sites
  * @param para
  * @param to_glob
- * @return AutoMPO
+ * @returns AutoMPO
  */
 template <typename BasisL, typename BasisR, typename BasisS, typename SiteType,
           typename Para>
@@ -289,4 +291,5 @@ AutoMPO get_ampo_tight_binding(const BasisL& leadL, const BasisR& leadR,
   }
   return ampo;
 }
+
 #endif

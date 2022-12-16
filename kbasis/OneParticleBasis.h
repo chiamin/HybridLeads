@@ -17,7 +17,7 @@ using namespace std;
  * effect.
  * @param damp_from_right
  * @param verbose Print out the matrix elements.
- * @return Matrix The Hamiltonian matrix, which is tridiagonal.
+ * @returns Matrix - The Hamiltonian matrix, which is tridiagonal.
  */
 Matrix tight_binding_Hamilt(int L, Real t, Real mu, Real damp_fac = 1.,
                             bool damp_from_right = true, bool verbose = false) {
@@ -86,12 +86,14 @@ class OneParticleBasis {
 
 /**
  * @brief Get the operator information in this basis for the operator Cdag_i,
- *     C_i = \sum_k U_ik C_k
- *  Cdag_i = \sum_k U_ik^* Cdag_k
+ * @f{eqnarray*}
+ *    C_i = \sum_k U_ik C_k \\
+ *    C_i^\dagger = \sum_k U_ik^* C_k^\dagger
+ * @f}
  *
  * @param i The real-space site index, 1-index.
  * @param dag Whether the operator has a dagger or not.
- * @return vector<tuple<int,auto,bool>> The basis index (k, 0-index) in
+ * @returns vector<tuple<int,auto,bool>> - The basis index (k, 0-index) in
  * ascending order, coefficient U_ik, and whether the operator has a dagger or
  * not.
  */
@@ -114,4 +116,5 @@ vector<tuple<int, auto, bool>> OneParticleBasis ::C_op(int i, bool dag) const {
 
 auto write(ostream& s, const OneParticleBasis& t) { t.write(s); }
 auto read(istream& s, OneParticleBasis& t) { t.read(s); }
+
 #endif

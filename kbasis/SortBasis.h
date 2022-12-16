@@ -6,6 +6,10 @@
 using namespace itensor;
 using namespace std;
 
+/**
+ * @brief
+ *
+ */
 using ToGlobDict =
     map<pair<string, int>, int>;  // {partition, ki} -> ortical index
 using ToLocDict =
@@ -18,7 +22,7 @@ using SortInfo = tuple<string, int, Real>;  // basis name, orbital index, energ
  *  A Global index is just a number.
  *
  * @param orbs
- * @return tuple<ToGlobDict,ToLocDict> to_glob[name,ki] = i, to_local[i] =
+ * @returns tuple<ToGlobDict,ToLocDict> - to_glob[name,ki] = i, to_local[i] =
  * {name,ki}, (Both ki and i are 1-index)
  */
 tuple<ToGlobDict, ToLocDict> make_orb_dicts(const vector<SortInfo>& orbs) {
@@ -57,7 +61,7 @@ vector<SortInfo> get_sort_info(const BasisT& basis, const Bases&... bases) {
  *
  * @tparam Bases
  * @param bases Arbitrary number of bases
- * @return vector<SortInfo>
+ * @returns vector<SortInfo>
  */
 template <typename... Bases>
 vector<SortInfo> sort_by_energy(const Bases&... bases) {
@@ -70,8 +74,16 @@ vector<SortInfo> sort_by_energy(const Bases&... bases) {
   return orbs;
 }
 
-// Sort all the basis states by energy; however put the states from <chainS> in
-// zero energy of the other states
+/**
+ * @brief Sort all the basis states by energy; however put the states from
+ * <chainS> in zero energy of the other states
+ *
+ * @tparam SysBasis
+ * @tparam LeadBasis
+ * @param chainS
+ * @param other_chains
+ * @returns vector<SortInfo>
+ */
 template <typename SysBasis, typename LeadBasis>
 vector<SortInfo> sort_by_energy_S_middle(
     const SysBasis& chainS, std::initializer_list<LeadBasis> other_chains) {
@@ -86,7 +98,17 @@ vector<SortInfo> sort_by_energy_S_middle(
   return orbs;
 }
 
-// chainS at the middle; chainC at the left of chainS
+/**
+ * @brief chainS at the middle; chainC at the left of chainS.
+ *
+ * @tparam SysBasis
+ * @tparam LeadBasis
+ * @tparam ChargeBasis
+ * @param chainS
+ * @param chainC
+ * @param other_chains
+ * @returns vector<SortInfo>
+ */
 template <typename SysBasis, typename LeadBasis, typename ChargeBasis>
 vector<SortInfo> sort_by_energy_S_middle_charging(
     const SysBasis& chainS, const ChargeBasis& chainC,
@@ -102,7 +124,15 @@ vector<SortInfo> sort_by_energy_S_middle_charging(
   return orbs;
 }
 
-// Put the charging site at zero energy
+/**
+ * @brief Put the charging site at zero energy.
+ *
+ * @tparam BasisC
+ * @tparam Bases
+ * @param chainC
+ * @param bases
+ * @returns vector<SortInfo>
+ */
 template <typename BasisC, typename... Bases>
 vector<SortInfo> sort_by_energy_charging(const BasisC& chainC,
                                          const Bases&... bases) {
@@ -116,4 +146,5 @@ vector<SortInfo> sort_by_energy_charging(const BasisC& chainC,
   orbs.insert(it, orb_C.begin(), orb_C.end());
   return orbs;
 }
+
 #endif
