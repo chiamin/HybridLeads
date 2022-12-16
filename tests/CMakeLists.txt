@@ -19,12 +19,16 @@ find_package(Armadillo REQUIRED)
 include_directories(${ARMADILLO_INCLUDE_DIRS})
 
 # Include Catch2 framework for unit test
-find_package(Catch2 3 REQUIRED)
+find_package(Catch2 3 REQUIRED HINTS "/root/Catch2")
+
+# Include trompeloeil for mocking in unit test
+find_package(trompeloeil REQUIRED HINTS "/root/trompeloeil")
 
 # Name all your sources filename here without extension
 set(SOURCES_FILES
     test_one_particle_basis
     test_hamiltonian
+    test_itdvp
 )
 foreach(name ${SOURCES_FILES})
     # Define sources and output executable
@@ -43,5 +47,6 @@ foreach(name ${SOURCES_FILES})
         PRIVATE itensor "${ITENSOR_LIBFLAGS}"
         ${ARMADILLO_LIBRARIES}
         Catch2::Catch2WithMain
+        trompeloeil::trompeloeil
     )
 endforeach()
