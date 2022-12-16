@@ -17,25 +17,26 @@ using namespace std;
  * @brief Randomly initialize iMPS in the mixed canonical form.
  *
  * @param W The uniform MPO tensor.
- * @param is Physical index of MPO tensor W.
- * @param iwl Left index of MPO tensor W.
- * @param iwr Right index of MPO tensor W.
- * @param A The initial MPS tensor. If it's empty (as an ill-defined ITensor),
- * random elements will be filled in.
+ * @param is Physical index of MPO tensor `W`.
+ * @param iwl Left index of MPO tensor `W`.
+ * @param iwr Right index of MPO tensor `W`.
+ * @param A The initial MPS tensor. If an empty tensor (as an ill-defined
+ * ITensor) is provided, random elements will be filled in in accordance with
+ * `is` and `D`.
  * @param D The maximum bond dimension.
- * @param ErrGoal
- * @param MaxIter
- * @param seed
+ * @param ErrGoal The tolerance for orthonormal procedure.
+ * @param MaxIter Maximum number of iteration for orthonormal procedure.
+ * @param seed Random seed used when `A` is empty.
  * @returns tuple <ITensor, ITensor, ITensor, ITensor, ITensor, ITensor> - {AL,
  * AR, AC, C, La0, Ra0}.
- * @retval AL - MPS tensor in the left canonical form.
- * @retval AR - MPS tensor in the right canonical form.
- * @retval AC - @f$ AL \times C @f$.
- * @retval C - MPS center tensor in the mixed form.
- * @retval La0 - Left environment tensor.
- * @retval Ra0 - Right environment tensor
+ * @retval AL - Left-normalized iMPS tensor in the mixed canonical form.
+ * @retval AR - Right-normalized iMPS tensor in the mixed canonical form.
+ * @retval AC - The center site tensor, `AL` @f$\times@f$ `C`.
+ * @retval C - The center matrix of iMPS in the mixed canonical form.
+ * @retval La0 - Left fixed-point tensor of `A`.
+ * @retval Ra0 - Right fixed-point tensor of `A`.
  *
- * @see https://arxiv.org/abs/1810.07006
+ * @see https://scipost.org/SciPostPhysLectNotes.7
  */
 tuple<ITensor, ITensor, ITensor, ITensor, ITensor, ITensor> itdvp_initial(
     const ITensor& W, const Index& is, const Index& iwl, const Index& iwr,
@@ -87,25 +88,28 @@ inline Real diff_ALC_AC(const ITensor& AL, const ITensor& C,
 }
 
 /**
- * @brief
+ * @brief Variational uniform MPS (VUMPS) algorithm.
  *
  * @tparam TimeType
- * @param W
- * @param AL
- * @param AR
- * @param AC
- * @param C
- * @param La0
- * @param Ra0
- * @param dt
+ * @param W The uniform MPO tensor.
+ * @param AL Left-normalized iMPS tensor in the mixed canonical form.
+ * @param AR Right-normalized iMPS tensor in the mixed canonical form.
+ * @param AC The center site tensor, `AL` @f$\times@f$ `C`.
+ * @param C The center matrix of iMPS in the mixed canonical form.
+ * @param La0 Left fixed-point tensor of initial iMPS `A`.
+ * @param Ra0 Right fixed-point tensor of initial iMPS `A`.
+ * @param dt Length of time step. If `dt` is real, imaginary time evolution will
+ * be performed; otherwise if `dt` is imaginary, real time evolution will be
+ * performed.
  * @param args ErrGoal, MaxIter, used in applyExp and arnoldi.
  * @returns tuple <Real, Real, ITensor, ITensor> {en, err, LW, RW}.
- * @retval en -
- * @retval err -
- * @retval LW -
- * @retval RW -
+ * @retval en - The variational ground state energy.
+ * @retval err - Error measure.
+ * @retval LW - Left fixed-point tensor of `W`.
+ * @retval RW - Right fixed-point tensor of `W`.
  *
- * @see https://arxiv.org/abs/1810.07006
+ * @note SciPost Phys. Lect. Notes 7 (2019), Algorithm 4 and Sec 5.3.
+ * @see https://scipost.org/SciPostPhysLectNotes.7
  */
 template <typename TimeType>
 tuple<Real, Real, ITensor, ITensor> itdvp(const ITensor& W, ITensor& AL,

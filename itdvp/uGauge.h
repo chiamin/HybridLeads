@@ -67,7 +67,7 @@ inline bool check_leading_eigen(const ITensor& A1, const ITensor& A2,
 }
 
 /**
- * @brief
+ * @brief Gauge transform a uniform MPS A into left-orthonormal form.
  * @details Solve
  *
  * --L--A-- = --AL--L--
@@ -99,12 +99,14 @@ inline bool check_leading_eigen(const ITensor& A1, const ITensor& A2,
  *
  *   --L--
  *
- * @param A
- * @param errGoal
- * @param maxIter
- * @return tuple<ITensor,ITensor>
+ * @param A The uniform MPS tensor.
+ * @param errGoal The tolerance.
+ * @param maxIter Maximum number iteration.
+ * @return tuple<ITensor,ITensor> - {AL, L}.
+ * @retval AL -
+ * @retval L -
  *
- * @note SciPost Phys. Lect. Notes 7 (2019), Algorithm 1
+ * @note SciPost Phys. Lect. Notes 7 (2019), Algorithm 1.
  * @see https://scipost.org/SciPostPhysLectNotes.7
  */
 tuple<ITensor, ITensor> Orthogonalize(const ITensor& A, Real errGoal = 1e-15,
@@ -193,15 +195,18 @@ inline void Rotate_basis(ITensor& C, ITensor& AL, ITensor& AR) {
 }
 
 /**
- * @brief Turn a given MPS tensor into the mixed canonical form.
+ * @brief Gauge transform a given MPS tensor into the mixed canonical form.
  *
  * @param A The MPS tensor.
- * @param errGoal
- * @param maxIter
+ * @param errGoal The tolerance for orthonormal procedure.
+ * @param maxIter Maximum number of iteration for orthonormal procedure.
  * @returns tuple<ITensor,ITensor,ITensor> {AL, AR, C}.
  * @retval AL -
  * @retval AR -
  * @retval AC -
+ *
+ * @note SciPost Phys. Lect. Notes 7 (2019), Algorithm 2.
+ * @see https://scipost.org/SciPostPhysLectNotes.7
  */
 inline tuple<ITensor, ITensor, ITensor> MixedCanonical(const ITensor& A,
                                                        Real errGoal = 1e-12,
