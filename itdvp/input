@@ -13,6 +13,6 @@ basic
     MaxIterInit = 20
     SeedInit    = 123456789
     auto_err    = yes
-    write       = yes
+    write       = no
     out_dir     = .
 }
