@@ -2,10 +2,10 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#include "../kbasis/Hamiltonian.h"
-#include "../kbasis/OneParticleBasis.h"
-#include "../kbasis/SortBasis.h"
 #include "itensor/all.h"
+#include "kbasis/Hamiltonian.h"
+#include "kbasis/OneParticleBasis.h"
+#include "kbasis/SortBasis.h"
 
 using namespace itensor;
 using namespace Catch;

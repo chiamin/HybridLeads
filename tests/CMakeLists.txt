@@ -4,6 +4,9 @@ project(Unittest LANGUAGES CXX)
 
 set(ITENSOR_DIR "/root/itensor")
 
+# Include module headers
+include_directories("/home/hybridleads/")
+
 # Include 3rd party headers from itensor.utility
 include_directories("/root/itensor.utility/")
 

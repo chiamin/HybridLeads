@@ -2,9 +2,10 @@
 #include <catch2/catch_all.hpp>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/trompeloeil.hpp>
 
-#include "../kbasis/OneParticleBasis.h"
 #include "itensor/all.h"
+#include "kbasis/OneParticleBasis.h"
 
 using namespace itensor;
 using namespace Catch;
@@ -12,9 +13,9 @@ using namespace Catch;
 /**
  * @brief Element-wise comparison of 2 given itensors.
  *
- * @param t1
- * @param t2
- * @param atol
+ * @param t1 The first tensor.
+ * @param t2 The second tensor.
+ * @param atol The absolute tolerance. Default to 1e-12.
  * @return bool
  */
 bool ALLCLOSE(ITensor t1, ITensor t2, double atol = 1e-12) {
@@ -66,6 +67,11 @@ TEST_CASE("Check one particle basis", "[OneParticleBasis]") {
   }
 }
 
+/**
+ * @brief Check AutoMPO in real space basis.
+ * @note The order of indices is not taken care by ITensor.
+ * @see https://github.com/chiamin/HybridLeads/issues/4
+ */
 TEST_CASE("Check AutoMPO in real space basis", "[RealSpaceBasis]") {
   int N = 3;
   auto t = 0.5;
@@ -87,8 +93,7 @@ TEST_CASE("Check AutoMPO in real space basis", "[RealSpaceBasis]") {
   auto T = H(1) * H(2) * H(3);
   auto idxs = inds(T);
 
-  // Note that the order of indices is not taken care by ITensor
-  // See: https://github.com/chiamin/HybridLeads/issues/4
+  // Warning: order of indices may not consist
   auto [Comb, c] = combiner(idxs[0], idxs[2], idxs[4]);
   auto [Combp, cp] = combiner(idxs[1], idxs[3], idxs[5]);
 
@@ -127,7 +132,7 @@ TEST_CASE("Check AutoMPO in real space basis", "[RealSpaceBasis]") {
   CHECK(min_en == Approx(energy).epsilon(1e-8));
 }
 
-TEST_CASE("Check AutoMPO in hybrid basis", "[HybridBasis]") {
+TEST_CASE("Check AutoMPO in hybrid basis by DMRG", "[HybridBasisDMRG]") {
   int N = GENERATE(8, 16, 20);
   auto t = 0.5;
   auto mu = GENERATE(0.0, 0.1);
@@ -218,12 +223,15 @@ TEST_CASE("Check AutoMPO in hybrid basis", "[HybridBasis]") {
 }
 
 /**
- * @brief Without the arg {"Exact=", true}, the approaximated MPO will have
+ * @brief Check AutoMPO in hybrid basis element-wisely.
+ * @note Without the arg {"Exact=", true}, the approaximated MPO will have
  * equal bond dim, otherwise the bond dim will be different on every bonds.
- * Note that element-wise conparison only make sence when 2 MPO tensors have
- * same bond dim. See also https://github.com/chiamin/HybridLeads/issues/9.
+ * @note Element-wise conparison only make sence when 2 MPO tensors have
+ * same bond dim.
+ * @see https://github.com/chiamin/HybridLeads/issues/9.
  */
-TEST_CASE("Check toMPO argument Exact", "[toMPOExact]") {
+TEST_CASE("Check AutoMPO in hybrid basis element-wisely",
+          "[HybridBasisMPOElem]") {
   int N = GENERATE(10, 16, 20);
   auto t = 0.5;
   auto mu = GENERATE(0.0, 0.1);
