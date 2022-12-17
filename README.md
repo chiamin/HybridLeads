@@ -17,7 +17,7 @@ Installation
     ```
     * Run the container:
     ```
-    docker run --rm -it -v $(pwd)/tests:/home/tests ghcr.io/chiamin/hybridleads:latest
+    docker run --rm -it -v $(pwd):/home ghcr.io/chiamin/hybridleads:latest
     ```
     **Note**: replace the image name `ghcr.io/chiamin/hybridleads:latest` by `hybridleads` if you're building the image by yourself.
     * Package version:
@@ -54,7 +54,7 @@ cmake -B build
 make -C build
 ```
 
-The resulting executable is ```test.exe``` (in ```tests/build/```).
+The resulting executables are ```test_*.exe``` (in ```tests/build/```).
 
 If mocking is needed in the unit test, one may consider [trompeloeil](https://github.com/rollbear/trompeloeil).
 
@@ -67,7 +67,7 @@ make -e
 ```
 to use those flags.
 
-Then, for instance, one can run the executable ```itdvp/itdvp.exe``` by
+Then, for instance, one can run the executable ```hybridleads/itdvp/itdvp.exe``` by
 ```
 ./itdvp.exe input
 ```
@@ -83,7 +83,7 @@ Apart from the known package managers, like [conan](https://conan.io/) or [vcpkg
     ```
     git submodule add -b {branch_name} {git_repo_url} {folder_name}
     ```
-    The optional directory name should be placed under `ext/`, i.e. the folder name should be something like `ext/{repo_name}`.
+    The optional directory name should be placed under `ext/`, i.e. `{folder_name}` should be something like `ext/{repo_name}`.
 
     If the above command fails, one could also try the manual checkout to specify the branch or tag afterwards.
 
