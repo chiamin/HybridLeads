@@ -76,14 +76,14 @@ see [here](https://www.itensor.org/docs.cgi?vers=cppv3&page=formulas/input) for 
 
 Dependency Management
 ---------------------
-Apart from the known package managers, like [conan](https://conan.io/) or [vcpkg](https://vcpkg.io/), here we adopt git submodule to do the dependency management for few reasons, (i) `ITensor` is unavailable in both ecosystems, and (ii) `itensor.utility` is a private project and is also unavailable in both ecosystems. Git submodule is a compromised solution.
+Apart from the known package managers, like [conan](https://conan.io/) or [vcpkg](https://vcpkg.io/), here we adopt git submodule to do the dependency management for few reasons, (i) `ITensor` is unavailable on both ecosystems, and (ii) `itensor.utility` is a personal project and is also unavailable on both ecosystems. Git submodule is a compromised solution.
 
 1. To add a new submodule
 
     ```
     git submodule add -b {branch_name} {git_repo_url} {folder_name}
     ```
-    The optional directory name should be placed unnder `ext/`, i.e. the folder name should be something like `ext/{repo_name}`.
+    The optional directory name should be placed under `ext/`, i.e. the folder name should be something like `ext/{repo_name}`.
 
     If the above command fails, one could also try the manual checkout to specify the branch or tag afterwards.
 
