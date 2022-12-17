@@ -22,10 +22,10 @@ find_package(Armadillo REQUIRED)
 include_directories(${ARMADILLO_INCLUDE_DIRS})
 
 # Include Catch2 framework for unit test
-find_package(Catch2 3 REQUIRED HINTS "/root/Catch2")
+find_package(Catch2 3 REQUIRED)
 
 # Include trompeloeil for mocking in unit test
-find_package(trompeloeil REQUIRED HINTS "/root/trompeloeil")
+find_package(trompeloeil REQUIRED)
 
 # Name all your sources filename here without extension
 set(SOURCES_FILES
