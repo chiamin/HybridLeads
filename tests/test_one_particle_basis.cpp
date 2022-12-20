@@ -307,3 +307,72 @@ TEST_CASE("Check AutoMPO in hybrid basis element-wisely",
     }
   }
 }
+
+/**
+ * @brief The mocked class.
+ * @note Additional parentheses is required for nested return type.
+ * @see https://github.com/rollbear/trompeloeil/issues/164
+ */
+class MockOneParticleBasis : public OneParticleBasis {
+ public:
+  MockOneParticleBasis(const string& name, int L, Real t, Real mu) {}
+  MAKE_CONST_MOCK1(en, Real(int));
+  MAKE_CONST_MOCK2(C_op,
+                   (std::vector<std::tuple<int, double, bool>>)(int, bool));
+};
+
+/**
+ * @brief Check AutoMPO in hybrid basis element-wisely by mocking coefficients.
+ * @note Even though we have mocked the one-particle basis eigenmodes, MPO
+ * tensors can still differ upon a Jordan-Wigner string.
+ * @see https://github.com/chiamin/HybridLeads/issues/9
+ * @see https://www.itensor.org/docs.cgi?page=tutorials/fermions
+ */
+TEST_CASE(
+    "Check AutoMPO in hybrid basis element-wisely by mocking coefficients",
+    "[HybridBasisMPOMockElem]") {
+  int N = GENERATE(10, 16, 20);
+  auto t = 0.5;
+  auto mu = GENERATE(0.0, 0.1);
+  auto sites = Fermion(N);
+  auto ampo = AutoMPO(sites);
+
+  // Mock one-particle eigen pairs to be one and one vector.
+  MockOneParticleBasis basis("sub_sys", N / 2, t, mu);
+  std::vector<std::tuple<int, double, bool>> mock_coef;
+  for (int i = 0; i < N; i++) {
+    mock_coef.emplace_back(i + 1, 1, false);
+  }
+  ALLOW_CALL(basis, en(trompeloeil::ge(1))).RETURN(1);
+  ALLOW_CALL(basis, C_op(trompeloeil::ge(1), ANY(bool))).RETURN(mock_coef);
+
+  // 1. The k-space part
+  for (int k = 1; k <= N / 2; ++k) {
+    auto coef = basis.en(k);
+    ampo += coef, "N", k;
+  }
+  // 2. The mixing part
+  auto coef = basis.C_op(N / 2, false);
+  for (int k = 1; k <= N / 2; ++k) {
+    ampo += -t * get<1>(coef[k - 1]), "Cdag", k, "C", N / 2 + 1;
+    ampo += -t * get<1>(coef[k - 1]), "Cdag", N / 2 + 1, "C", k;
+  }
+  // 3. The real-space part
+  for (int i = N / 2 + 1; i <= N; ++i) {
+    ampo += -mu, "N", i;
+  }
+  for (int i = N / 2 + 1; i < N; ++i) {
+    ampo += -t, "Cdag", i, "C", i + 1;
+    ampo += -t, "Cdag", i + 1, "C", i;
+  }
+
+  auto H = toMPO(ampo);
+  CHECK(ALLCLOSE(H(2), H(3)) == false);  // k-space part
+  for (int i = 3; i <= N / 2 - 1; ++i) {
+    CHECK(ALLCLOSE(H(i), H(i + 1)) == true);  // k-space part
+  }
+  CHECK(ALLCLOSE(H(N / 2 + 1), H(N / 2 + 2)) == false);  // real-space part
+  for (int i = N / 2 + 2; i <= N - 2; ++i) {
+    CHECK(ALLCLOSE(H(i), H(i + 1)) == true);  // real-space part
+  }
+}
