@@ -232,7 +232,7 @@ TEST_CASE("Check AutoMPO in hybrid basis by DMRG", "[HybridBasisDMRG]") {
  */
 TEST_CASE("Check AutoMPO in hybrid basis element-wisely",
           "[HybridBasisMPOElem]") {
-  int N = GENERATE(10, 16, 20);
+  int N = GENERATE(8, 16, 20);
   auto t = 0.5;
   auto mu = GENERATE(0.0, 0.1);
   auto sites = Fermion(N);
@@ -289,11 +289,16 @@ TEST_CASE("Check AutoMPO in hybrid basis element-wisely",
       // rest of the real-space part
       CHECK(ALLCLOSE(H(i), expected_H(i)) == true);
     }
-    // Check that coef Uik is equally-partitioned into H(N/2) and H(N/2 + 1)
-    CHECK(elt(H(N / 2), 1, 2, 2, 3) ==
-          Approx(elt(H(N / 2 + 1), 1, 2, 2, 3)).epsilon(1e-12));
-    CHECK(elt(H(N / 2), 2, 1, 2, 4) ==
-          Approx(elt(H(N / 2 + 1), 2, 1, 2, 4)).epsilon(1e-12));
+    // Check that coef Uik is not equally-partitioned into H(N/2) and H(N/2 + 1)
+    auto idxs = inds(H(N / 2));
+    CHECK(hasTags(idxs[0], "Link"));
+    CHECK(hasTags(idxs[1], "Link"));
+    CHECK(hasTags(idxs[2], "Site"));
+    CHECK(hasTags(idxs[3], "Site"));
+    CHECK_FALSE(elt(H(N / 2), 2, 3, 1, 2) ==
+                Approx(elt(H(N / 2 + 1), 2, 3, 1, 2)).epsilon(1e-12));
+    CHECK_FALSE(elt(H(N / 2), 2, 4, 2, 1) ==
+                Approx(elt(H(N / 2 + 1), 2, 4, 2, 1)).epsilon(1e-12));
   }
 
   SECTION("toMPO with argument Exact") {
@@ -312,6 +317,8 @@ TEST_CASE("Check AutoMPO in hybrid basis element-wisely",
  * @brief The mocked class.
  * @note Additional parentheses is required for nested return type.
  * @see https://github.com/rollbear/trompeloeil/issues/164
+ * @see https://github.com/rollbear/trompeloeil/blob/main/docs/ <!--\
+ * --> CookBook.md#mocking_return_template
  */
 class MockOneParticleBasis : public OneParticleBasis {
  public:
@@ -331,7 +338,7 @@ class MockOneParticleBasis : public OneParticleBasis {
 TEST_CASE(
     "Check AutoMPO in hybrid basis element-wisely by mocking coefficients",
     "[HybridBasisMPOMockElem]") {
-  int N = GENERATE(10, 16, 20);
+  int N = GENERATE(8, 16, 20);
   auto t = 0.5;
   auto mu = GENERATE(0.0, 0.1);
   auto sites = Fermion(N);
