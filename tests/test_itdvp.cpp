@@ -9,3 +9,5 @@
 
 using namespace itensor;
 using namespace Catch;
+
+TEST_CASE("Check ", "[FixPointTensor]") {}
