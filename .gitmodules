@@ -13,3 +13,7 @@
 	path = ext/armadillo
 	url = https://gitlab.com/conradsnicta/armadillo-code.git
 	branch = 11.4.x
+[submodule "ext/trompeloeil"]
+	path = ext/trompeloeil
+	url = https://github.com/rollbear/trompeloeil.git
+	branch = v43

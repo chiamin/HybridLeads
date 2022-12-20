@@ -17,7 +17,7 @@ Installation
     ```
     * Run the container:
     ```
-    docker run --rm -it -v $(pwd)/tests:/home/tests ghcr.io/chiamin/hybridleads:latest
+    docker run --rm -it -v $(pwd):/home ghcr.io/chiamin/hybridleads:latest
     ```
     **Note**: replace the image name `ghcr.io/chiamin/hybridleads:latest` by `hybridleads` if you're building the image by yourself.
     * Package version:
@@ -27,6 +27,7 @@ Installation
       * `ITensor v3.1.11`
       * `armadillo 11.4.x`
       * `Catch2 v3.2.0`
+      * `trompeloeil v43`
     * Environment variables:
       The compiling flags for ITensor,
       * `CCCOM="g++ -m64 -std=c++17 -fconcepts -fPIC"`
@@ -53,8 +54,9 @@ cmake -B build
 make -C build
 ```
 
-The resulting executable is ```test.exe``` (in ```tests/build/```).
+The resulting executables are ```test_*.exe``` (in ```tests/build/```).
 
+If mocking is needed in the unit test, one may consider [trompeloeil](https://github.com/rollbear/trompeloeil).
 
 Run other main executables
 --------------------------
@@ -65,8 +67,28 @@ make -e
 ```
 to use those flags.
 
-Then, for instance, one can run the executable ```itdvp/itdvp.exe``` by
+Then, for instance, one can run the executable ```hybridleads/itdvp/itdvp.exe``` by
 ```
 ./itdvp.exe input
 ```
-with the parameters been assigned in ```itdvp/input```.
+with the parameters been assigned in ```itdvp/input```,
+see [here](https://www.itensor.org/docs.cgi?vers=cppv3&page=formulas/input) for the more detailed documentation on input files.
+
+Dependency Management
+---------------------
+Apart from the known package managers, like [conan](https://conan.io/) or [vcpkg](https://vcpkg.io/), here we adopt git submodule to do the dependency management for few reasons, (i) `ITensor` is unavailable on both ecosystems, and (ii) `itensor.utility` is a personal project and is also unavailable on both ecosystems. Git submodule is a compromised solution.
+
+1. To add a new submodule
+
+    ```
+    git submodule add -b {branch_name} {git_repo_url} {folder_name}
+    ```
+    The optional directory name should be placed under `ext/`, i.e. `{folder_name}` should be something like `ext/{repo_name}`.
+
+    If the above command fails, one could also try the manual checkout to specify the branch or tag afterwards.
+
+2. To update an existig submodule to its newest version
+    ```
+    git submodule update --remote {repo_name}
+    ```
+    or manually checkout to newer tag or version within the directory where the submodule seats in.
