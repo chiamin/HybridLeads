@@ -351,6 +351,7 @@ class MockOneParticleBasis : public OneParticleBasis {
  * @note Even though we have mocked the one-particle basis eigenmodes, MPO
  * tensors can still differ upon a Jordan-Wigner string.
  * @see https://github.com/chiamin/HybridLeads/issues/9
+ * @see https://github.com/chiamin/HybridLeads/issues/12
  * @see https://www.itensor.org/docs.cgi?page=tutorials/fermions
  */
 TEST_CASE(
@@ -371,33 +372,87 @@ TEST_CASE(
   ALLOW_CALL(basis, en(trompeloeil::ge(1))).RETURN(1);
   ALLOW_CALL(basis, C_op(trompeloeil::ge(1), ANY(bool))).RETURN(mock_coef);
 
-  // 1. The k-space part
-  for (int k = 1; k <= N / 2; ++k) {
-    auto coef = basis.en(k);
-    ampo += coef, "N", k;
-  }
-  // 2. The mixing part
-  auto coef = basis.C_op(N / 2, false);
-  for (int k = 1; k <= N / 2; ++k) {
-    ampo += -t * get<1>(coef[k - 1]), "Cdag", k, "C", N / 2 + 1;
-    ampo += -t * get<1>(coef[k - 1]), "Cdag", N / 2 + 1, "C", k;
-  }
-  // 3. The real-space part
-  for (int i = N / 2 + 1; i <= N; ++i) {
-    ampo += -mu, "N", i;
-  }
-  for (int i = N / 2 + 1; i < N; ++i) {
-    ampo += -t, "Cdag", i, "C", i + 1;
-    ampo += -t, "Cdag", i + 1, "C", i;
+  SECTION("Ordering: k-space followed by real space") {
+    // 1. The k-space part
+    for (int k = 1; k <= N / 2; ++k) {
+      auto coef = basis.en(k);
+      ampo += coef, "N", k;
+    }
+    // 2. The mixing part
+    auto coef = basis.C_op(N / 2, false);
+    for (int k = 1; k <= N / 2; ++k) {
+      ampo += -t * get<1>(coef[k - 1]), "Cdag", k, "C", N / 2 + 1;
+      ampo += -t * get<1>(coef[k - 1]), "Cdag", N / 2 + 1, "C", k;
+    }
+    // 3. The real-space part
+    for (int i = N / 2 + 1; i <= N; ++i) {
+      ampo += -mu, "N", i;
+    }
+    for (int i = N / 2 + 1; i < N; ++i) {
+      ampo += -t, "Cdag", i, "C", i + 1;
+      ampo += -t, "Cdag", i + 1, "C", i;
+    }
+
+    auto H = toMPO(ampo);
+    CHECK(ALLCLOSE(H(2), H(3)) == false);  // k-space part
+    for (int i = 3; i <= N / 2 - 1; ++i) {
+      CHECK(ALLCLOSE(H(i), H(i + 1)) == true);  // k-space part
+    }
+    CHECK(ALLCLOSE(H(N / 2 + 1), H(N / 2 + 2)) == false);  // real-space part
+    for (int i = N / 2 + 2; i <= N - 2; ++i) {
+      CHECK(ALLCLOSE(H(i), H(i + 1)) == true);  // real-space part
+    }
   }
 
-  auto H = toMPO(ampo);
-  CHECK(ALLCLOSE(H(2), H(3)) == false);  // k-space part
-  for (int i = 3; i <= N / 2 - 1; ++i) {
-    CHECK(ALLCLOSE(H(i), H(i + 1)) == true);  // k-space part
-  }
-  CHECK(ALLCLOSE(H(N / 2 + 1), H(N / 2 + 2)) == false);  // real-space part
-  for (int i = N / 2 + 2; i <= N - 2; ++i) {
-    CHECK(ALLCLOSE(H(i), H(i + 1)) == true);  // real-space part
+  SECTION("Ordering: real space followed by k-space") {
+    // 1. The real-space part
+    for (int i = 1; i <= N / 2; ++i) {
+      ampo += -mu, "N", i;
+    }
+    for (int i = 1; i < N / 2; ++i) {
+      ampo += -t, "Cdag", i, "C", i + 1;
+      ampo += -t, "Cdag", i + 1, "C", i;
+    }
+    // 2. The mixing part
+    auto coef = basis.C_op(1, false);
+    for (int k = N / 2 + 1; k <= N; ++k) {
+      ampo += -t * get<1>(coef[k - 1]), "Cdag", N / 2, "C", k;
+      ampo += -t * get<1>(coef[k - 1]), "Cdag", k, "C", N / 2;
+    }
+    // 3. The k-space part
+    for (int k = N / 2 + 1; k <= N; ++k) {
+      auto coef = basis.en(k - N / 2);
+      ampo += coef, "N", k;
+    }
+
+    auto H = toMPO(ampo);
+    for (int i = 2; i <= N / 2 - 2; ++i) {
+      CHECK(ALLCLOSE(H(i), H(i + 1)) == true);  // real-space part
+    }
+    CHECK(ALLCLOSE(H(N / 2 - 1), H(N / 2)) == false);  // real-space part
+    for (int i = N / 2 + 1; i <= N - 2; ++i) {
+      CHECK(ALLCLOSE(H(i), H(i + 1)) == false);  // k-space part
+    }
+    // Check that the angle of Jordan-Wigner string will cancel out eventually
+    auto idxs = inds(H(N / 2));
+    CHECK(hasTags(idxs[0], "Link"));
+    CHECK(hasTags(idxs[1], "Link"));
+    CHECK(hasTags(idxs[2], "Site"));
+    CHECK(hasTags(idxs[3], "Site"));
+    for (int i = N / 2 + 1; i < N; ++i) {
+      auto jw_angle_dag = elt(H(N / 2), 2, 3, 1, 2);
+      auto jw_angle = elt(H(N / 2), 2, 4, 2, 1);
+      for (int j = N / 2 + 1; j <= i; ++j) {
+        if (i == j) {
+          jw_angle_dag *= elt(H(j), 3, 1, 2, 1);
+          jw_angle *= elt(H(j), 4, 1, 1, 2);
+        } else {
+          jw_angle_dag *= elt(H(j), 3, 3, 1, 1);
+          jw_angle *= elt(H(j), 4, 4, 1, 1);
+        }
+      }
+      CHECK(jw_angle_dag == Approx(-t).epsilon(1e-12));
+      CHECK(jw_angle == Approx(-t).epsilon(1e-12));
+    }
   }
 }
