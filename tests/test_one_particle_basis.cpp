@@ -314,6 +314,24 @@ TEST_CASE("Check AutoMPO in hybrid basis element-wisely",
 }
 
 /**
+ * @brief
+ * @details While checking the coef Uik is not equally-partitioned into both
+ * sides of the contact, we accidentally found the `elt(T)` func has overflow
+ * issue when indexing a out-of-range value.
+ * @see https://github.com/ITensor/ITensor/issues/416
+ */
+TEST_CASE("Test indexing behaviour of elt(T) func", "[TestFuncElt]") {
+  auto i = Index(2);
+  auto j = Index(2);
+  auto T = randomITensor(i, j);
+  for (int k = 3; k < 20; ++k) {
+    // always gives zero or infinity for out-of-range index?
+    CHECK(((elt(T, k, k) < std::numeric_limits<float>::min()) ||
+           (elt(T, k, k) > std::numeric_limits<float>::max())));
+  }
+}
+
+/**
  * @brief The mocked class.
  * @note Additional parentheses is required for nested return type.
  * @see https://github.com/rollbear/trompeloeil/issues/164
