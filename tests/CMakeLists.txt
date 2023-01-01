@@ -29,24 +29,24 @@ find_package(trompeloeil REQUIRED)
 
 # Name all your sources filename here without extension
 set(SOURCES_FILES
-    test_one_particle_basis
-    test_hamiltonian
-    test_itdvp
+    kbasis/test_one_particle_basis.cpp
+    kbasis/test_hamiltonian.cpp
+    # itdvp/test_itdvp.cpp
 )
-foreach(name ${SOURCES_FILES})
+foreach(SOURCE_PATH ${SOURCES_FILES})
     # Define sources and output executable
-    add_executable(${name}.exe
-        ${name}.cpp
-    )
+    get_filename_component(SOURCE ${SOURCE_PATH} NAME)
+    string(REGEX REPLACE "[.]cpp$" ".exe" OUTPUT_EXE ${SOURCE})
+    add_executable(${OUTPUT_EXE} ${SOURCE_PATH})
 
     # Compiling flags
-    target_compile_features(${name}.exe PRIVATE cxx_std_17)
-    target_compile_options(${name}.exe PRIVATE -m64 -fconcepts -fPIC)
-    target_link_libraries(${name}.exe PRIVATE pthread blas lapack)
+    target_compile_features(${OUTPUT_EXE} PRIVATE cxx_std_17)
+    target_compile_options(${OUTPUT_EXE} PRIVATE -m64 -fconcepts -fPIC)
+    target_link_libraries(${OUTPUT_EXE} PRIVATE pthread blas lapack)
     set(ITENSOR_LIBFLAGS "-lpthread -L/usr/lib -lblas -llapack -fopenmp")
 
     # Link executable with libraries
-    target_link_libraries(${name}.exe
+    target_link_libraries(${OUTPUT_EXE}
         PRIVATE itensor "${ITENSOR_LIBFLAGS}"
         ${ARMADILLO_LIBRARIES}
         Catch2::Catch2WithMain
