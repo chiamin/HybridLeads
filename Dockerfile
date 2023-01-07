@@ -35,13 +35,12 @@ RUN cd $PKGDIR/armadillo && \
 # Install Catch2 framework for unit test
 RUN cd $PKGDIR/catch2 && \
     cmake -Bbuild -H. -DBUILD_TESTING=OFF && \
-    cmake --build build/ --target install
+    cmake --build build --target install
 
 # Install trompeloeil
 RUN cd $PKGDIR/trompeloeil && \
-    mkdir build && cd build && \
-    cmake -G "Unix Makefiles" .. && \
-    cmake --build . --target install
+    cmake -B build -G "Unix Makefiles" && \
+    cmake --build build --target install
 
 RUN apt-get -y clean && \
     rm -rf /var/lib/apt/lists/*
