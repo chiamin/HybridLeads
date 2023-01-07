@@ -32,6 +32,7 @@ set(SOURCES_FILES
     kbasis/test_one_particle_basis.cpp
     kbasis/test_hamiltonian.cpp
     # itdvp/test_itdvp.cpp
+    hybridbasis/test_mpo_model.cpp
 )
 foreach(SOURCE_PATH ${SOURCES_FILES})
     # Define sources and output executable
