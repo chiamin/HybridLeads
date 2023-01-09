@@ -12,9 +12,12 @@ using namespace itensor;
  * @param t2 The second tensor.
  * @param atol The absolute tolerance. Default to 1e-12.
  * @return bool
+ * @throws `std::logic_error` when the order of two tensors mismatches.
  */
 bool ALLCLOSE(ITensor t1, ITensor t2, double atol = 1e-12) {
-  REQUIRE(order(t1) == order(t2));
+  if (order(t1) != order(t2)) {
+    throw std::logic_error("The order of two tensors mismatch.");
+  }
   auto check_close_zero = [&atol](Real r) {
     if (abs(r) > atol) {
       throw std::logic_error("Two tensors are not close.");
