@@ -99,11 +99,13 @@ class TightBinding : public MPOModel {
    * @param left_size
    * @param system_size
    * @param right_size
-   * @param args Arguments containing the model parameters, allowed keywords:
-   * (1) t_left, t_left_sys, t_sys, t_right_sys, t_right
-   * (2) mu_left, mu_sys, mu_right
+   * @param args Arguments containing the model parameters with these keywords:
+   * (1) hoppings: `"t_left"`, `"t_left_sys"`, `"t_sys"`, `"t_right_sys"`,
+   * `"t_right"` (2) on-site energies: `"mu_left"`, `"mu_sys"`, `"mu_right"` (3)
+   * `"ConserveQNs"` passed to class: `ITensor::FermionSite`, default false.
    */
-  TightBinding(int left_size, int system_size, int right_size, Args const& args)
+  TightBinding(int left_size, int system_size, int right_size,
+               Args const& args = Args::global())
       : MPOModel(left_size, system_size, right_size) {
     t_left = args.getReal("t_left", 0.0);
     t_left_sys = args.getReal("t_left_sys", 0.0);
@@ -113,7 +115,8 @@ class TightBinding : public MPOModel {
     mu_left = args.getReal("mu_left", 0.0);
     mu_sys = args.getReal("mu_sys", 0.0);
     mu_right = args.getReal("mu_right", 0.0);
-    _sites = Fermion(n_tot);
+    bool conserve_qns = args.getBool("ConserveQNs", false);
+    _sites = Fermion(n_tot, {"ConserveQNs", conserve_qns});
     ampo = AutoMPO(_sites);
     gen_auto_mpo();
   }
