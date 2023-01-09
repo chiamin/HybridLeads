@@ -1,3 +1,6 @@
+#ifndef __MPOMODEL_H__
+#define __MPOMODEL_H__
+
 #include <armadillo>
 
 #include "itensor/all.h"
@@ -170,3 +173,5 @@ class KondoImpurity : public MPOModel {
                 Args const& args)
       : MPOModel(left_size, system_size, right_size) {}
 };
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef __UTILS_H__
+#define __UTILS_H__
+
 #include "itensor/all.h"
 
 using namespace itensor;
@@ -26,3 +29,5 @@ bool ALLCLOSE(ITensor t1, ITensor t2, double atol = 1e-12) {
   }
   return true;
 }
+
+#endif
