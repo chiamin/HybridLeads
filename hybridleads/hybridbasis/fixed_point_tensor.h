@@ -68,8 +68,7 @@ class FixedPointTensor {
     if (!ALLCLOSE(_mpo(_uniform_site), _mpo(neighbour_site))) {
       throw std::invalid_argument(
           "The `uniform site` should be picked from the bulk, with at least "
-          "one "
-          "neighbouring MPO tensor being identical with MPO tensor on this "
+          "one neighbouring MPO tensor being identical with MPO tensor on this "
           "site.");
     }
   }
