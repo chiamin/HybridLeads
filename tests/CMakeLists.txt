@@ -21,6 +21,9 @@ include_directories(${ITENSOR_DIR}/)
 find_package(Armadillo REQUIRED)
 include_directories(${ARMADILLO_INCLUDE_DIRS})
 
+# Include glog for logging
+find_package (glog 0.6.0 REQUIRED)
+
 # Include Catch2 framework for unit test
 find_package(Catch2 3 REQUIRED)
 
@@ -50,6 +53,7 @@ foreach(SOURCE_PATH ${SOURCES_FILES})
     target_link_libraries(${OUTPUT_EXE}
         PRIVATE itensor "${ITENSOR_LIBFLAGS}"
         ${ARMADILLO_LIBRARIES}
+        glog::glog
         Catch2::Catch2WithMain
         trompeloeil::trompeloeil
     )

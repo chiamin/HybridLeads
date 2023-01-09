@@ -6,10 +6,11 @@ ARG PKGDIR=/root
 WORKDIR $WORKDIR
 COPY . $WORKDIR
 
-# Set up compiling flags for ITensor
+# Set up compiling flags for ITensor, and the shared lib path
 ENV CCCOM="g++ -m64 -std=c++17 -fconcepts -fPIC" \
     PLATFORM="lapack" \
-    BLAS_LAPACK_LIBFLAGS="-lpthread -L/usr/lib -lblas -llapack"
+    BLAS_LAPACK_LIBFLAGS="-lpthread -L/usr/lib -lblas -llapack" \
+    LD_LIBRARY_PATH="/usr/local/lib"
 
 # Install cmake, lapack, blas
 RUN apt update && \
@@ -31,6 +32,11 @@ RUN cd $PKGDIR/itensor && \
 RUN cd $PKGDIR/armadillo && \
     cmake . && \
     make install
+
+# Install glog
+RUN cd $PKGDIR/glog && \
+    cmake -B build -G "Unix Makefiles" && \
+    cmake --build build --target install
 
 # Install Catch2 framework for unit test
 RUN cd $PKGDIR/catch2 && \
