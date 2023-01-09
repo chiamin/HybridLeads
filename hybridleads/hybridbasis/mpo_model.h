@@ -27,12 +27,37 @@ class MPOModel {
     n_right = right_size;
     n_tot = left_size + system_size + right_size;
   }
+
+  /**
+   * @brief Return the size of each block in joint system.
+   * @returns std::tuple<int, int, int> (left_size, system_size, right_size).
+   */
   std::tuple<int, int, int> sizes() {
     return std::make_tuple(n_left, n_sys, n_right);
   }
+
+  /**
+   * @brief Return `SiteSet` of this model.
+   * @returns SiteSet
+   */
   SiteSet sites() { return _sites; }
+
+  /**
+   * @brief Return the `AutoMPO` instance in hybrid basis.
+   * @returns MPO
+   */
   MPO mpo() { return toMPO(ampo); }
+
+  /**
+   * @brief Return the single particle Hamiltonian in "standard" basis.
+   * @returns arma::mat - sp_ham.
+   */
   arma::mat single_particle_ham() { return sp_ham; }
+
+  /**
+   * @brief Return the single particle Hamiltonian in hybrid basis.
+   * @returns arma::mat - hybrid_ham.
+   */
   arma::mat hybrid_basis_ham() { return hybrid_ham; }
 
  protected:
@@ -41,6 +66,11 @@ class MPOModel {
   AutoMPO ampo;
   arma::mat sp_ham;
   arma::mat hybrid_ham;
+
+  /**
+   * @brief Rotate the basis of single particle Hamiltonian into the hybrid
+   * basis.
+   */
   void basis_transformer() {
     arma::vec evals;
     arma::mat evecs;
@@ -52,12 +82,24 @@ class MPOModel {
         evecs;
     hybrid_ham = unitary_mat.t() * sp_ham * unitary_mat;
   }
+
   virtual void gen_single_particle_ham() {}
+
   virtual void gen_auto_mpo() {}
 };
 
 class TightBinding : public MPOModel {
  public:
+  /**
+   * @brief Construct the tight-binding model in hybridbasis.
+   *
+   * @param left_size
+   * @param system_size
+   * @param right_size
+   * @param args Arguments containing the model parameters, allowed keywords:
+   * (1) t_left, t_left_sys, t_sys, t_right_sys, t_right
+   * (2) mu_left, mu_sys, mu_right
+   */
   TightBinding(int left_size, int system_size, int right_size, Args const& args)
       : MPOModel(left_size, system_size, right_size) {
     t_left = args.getReal("t_left", 0.0);
@@ -76,11 +118,13 @@ class TightBinding : public MPOModel {
  protected:
   Real t_left, t_left_sys, t_sys, t_right_sys, t_right;
   Real mu_left, mu_sys, mu_right;
+
   arma::mat block_tight_binding_ham(int n, Real t, Real mu) {
     auto elems = tight_binding_Hamilt(n, t, mu);
     arma::mat block_ham(&elems(0, 0), n, n);
     return block_ham;
   }
+
   void gen_single_particle_ham() {
     sp_ham = arma::zeros(n_tot, n_tot);
     arma::mat block_11 = block_tight_binding_ham(n_left, t_left, mu_left);
@@ -96,6 +140,7 @@ class TightBinding : public MPOModel {
     sp_ham(n_left + n_sys - 1, n_left + n_sys) = -t_right_sys;
     sp_ham(n_left + n_sys, n_left + n_sys - 1) = -t_right_sys;
   }
+
   void gen_auto_mpo() {
     gen_single_particle_ham();
     basis_transformer();
