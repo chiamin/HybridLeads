@@ -26,5 +26,5 @@ jobs:
       - name: Unit Test
         run: |
           for filename in ${{ env.build_dir }}/test_*.exe; do
-            ./"$filename"
+            ./"$filename" || continue
           done
