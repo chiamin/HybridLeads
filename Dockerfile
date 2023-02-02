@@ -16,6 +16,7 @@ ENV CCCOM="g++ -m64 -std=c++17 -fconcepts -fPIC" \
 RUN apt update && \
     apt-get install -y --no-install-recommends \
     cmake \
+    # gdb \
     liblapack-dev \
     liblapacke-dev \
     libopenblas-dev

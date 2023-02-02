@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(Unittest LANGUAGES CXX)
-
+# set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(ITENSOR_DIR "/root/itensor")
 
 # Include module headers
