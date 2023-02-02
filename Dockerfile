@@ -1,4 +1,4 @@
-FROM gcc:12.2
+FROM gcc:12.2 as base
 LABEL maintainer="ChiaMin chiaminchung@gmail.com, TaoLin tanlin2013@gmail.com"
 
 ARG WORKDIR=/home
@@ -11,6 +11,9 @@ ENV CCCOM="g++ -m64 -std=c++17 -fconcepts -fPIC" \
     PLATFORM="lapack" \
     BLAS_LAPACK_LIBFLAGS="-lpthread -L/usr/lib -lblas -llapack" \
     LD_LIBRARY_PATH="/usr/local/lib"
+
+
+FROM base as runtime
 
 # Install cmake, lapack, blas
 RUN apt update && \
