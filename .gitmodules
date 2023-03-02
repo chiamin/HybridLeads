@@ -17,3 +17,7 @@
 	path = ext/trompeloeil
 	url = https://github.com/rollbear/trompeloeil.git
 	branch = v43
+[submodule "ext/glog"]
+	path = ext/glog
+	url = https://github.com/google/glog.git
+	branch = v0.6.0

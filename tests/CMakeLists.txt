@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(Unittest LANGUAGES CXX)
-
+# set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(ITENSOR_DIR "/root/itensor")
 
 # Include module headers
@@ -21,6 +21,9 @@ include_directories(${ITENSOR_DIR}/)
 find_package(Armadillo REQUIRED)
 include_directories(${ARMADILLO_INCLUDE_DIRS})
 
+# Include glog for logging
+find_package (glog 0.6.0 REQUIRED)
+
 # Include Catch2 framework for unit test
 find_package(Catch2 3 REQUIRED)
 
@@ -29,26 +32,28 @@ find_package(trompeloeil REQUIRED)
 
 # Name all your sources filename here without extension
 set(SOURCES_FILES
-    test_one_particle_basis
-    test_hamiltonian
-    test_itdvp
+    kbasis/test_one_particle_basis.cpp
+    kbasis/test_hamiltonian.cpp
+    # itdvp/test_itdvp.cpp
+    hybridbasis/test_mpo_model.cpp
 )
-foreach(name ${SOURCES_FILES})
+foreach(SOURCE_PATH ${SOURCES_FILES})
     # Define sources and output executable
-    add_executable(${name}.exe
-        ${name}.cpp
-    )
+    get_filename_component(SOURCE ${SOURCE_PATH} NAME)
+    string(REGEX REPLACE "[.]cpp$" ".exe" OUTPUT_EXE ${SOURCE})
+    add_executable(${OUTPUT_EXE} ${SOURCE_PATH})
 
     # Compiling flags
-    target_compile_features(${name}.exe PRIVATE cxx_std_17)
-    target_compile_options(${name}.exe PRIVATE -m64 -fconcepts -fPIC)
-    target_link_libraries(${name}.exe PRIVATE pthread blas lapack)
+    target_compile_features(${OUTPUT_EXE} PRIVATE cxx_std_17)
+    target_compile_options(${OUTPUT_EXE} PRIVATE -m64 -fconcepts -fPIC)
+    target_link_libraries(${OUTPUT_EXE} PRIVATE pthread blas lapack)
     set(ITENSOR_LIBFLAGS "-lpthread -L/usr/lib -lblas -llapack -fopenmp")
 
     # Link executable with libraries
-    target_link_libraries(${name}.exe
+    target_link_libraries(${OUTPUT_EXE}
         PRIVATE itensor "${ITENSOR_LIBFLAGS}"
         ${ARMADILLO_LIBRARIES}
+        glog::glog
         Catch2::Catch2WithMain
         trompeloeil::trompeloeil
     )

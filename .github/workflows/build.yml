@@ -35,10 +35,12 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
             type=ref,event=pr
+            type=sha,format=long
+            type=raw,value={{date 'YYYYMMDD-hhmmss' tz='Asia/Taipei'}}
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           push: true

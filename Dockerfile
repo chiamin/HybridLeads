@@ -1,4 +1,4 @@
-FROM gcc:12.2
+FROM gcc:12.2 as base
 LABEL maintainer="ChiaMin chiaminchung@gmail.com, TaoLin tanlin2013@gmail.com"
 
 ARG WORKDIR=/home
@@ -6,15 +6,20 @@ ARG PKGDIR=/root
 WORKDIR $WORKDIR
 COPY . $WORKDIR
 
-# Set up compiling flags for ITensor
+# Set up compiling flags for ITensor, and the shared lib path
 ENV CCCOM="g++ -m64 -std=c++17 -fconcepts -fPIC" \
     PLATFORM="lapack" \
-    BLAS_LAPACK_LIBFLAGS="-lpthread -L/usr/lib -lblas -llapack"
+    BLAS_LAPACK_LIBFLAGS="-lpthread -L/usr/lib -lblas -llapack" \
+    LD_LIBRARY_PATH="/usr/local/lib"
+
+
+FROM base as runtime
 
 # Install cmake, lapack, blas
 RUN apt update && \
     apt-get install -y --no-install-recommends \
     cmake \
+    # gdb \
     liblapack-dev \
     liblapacke-dev \
     libopenblas-dev
@@ -32,16 +37,20 @@ RUN cd $PKGDIR/armadillo && \
     cmake . && \
     make install
 
+# Install glog
+RUN cd $PKGDIR/glog && \
+    cmake -B build -G "Unix Makefiles" && \
+    cmake --build build --target install
+
 # Install Catch2 framework for unit test
 RUN cd $PKGDIR/catch2 && \
     cmake -Bbuild -H. -DBUILD_TESTING=OFF && \
-    cmake --build build/ --target install
+    cmake --build build --target install
 
 # Install trompeloeil
 RUN cd $PKGDIR/trompeloeil && \
-    mkdir build && cd build && \
-    cmake -G "Unix Makefiles" .. && \
-    cmake --build . --target install
+    cmake -B build -G "Unix Makefiles" && \
+    cmake --build build --target install
 
 RUN apt-get -y clean && \
     rm -rf /var/lib/apt/lists/*
