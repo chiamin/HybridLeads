@@ -28,3 +28,13 @@ jobs:
           for filename in ${{ env.build_dir }}/test_*.exe; do
             ./"$filename" || continue
           done
+
+      - name: Generate coverage reports
+        run: |
+          apt update && \
+          apt-get install -y --no-install-recommends python3-pip && \
+          pip install gcovr==5.2 && \
+          gcovr
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3

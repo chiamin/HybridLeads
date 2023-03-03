@@ -48,6 +48,10 @@ foreach(SOURCE_PATH ${SOURCES_FILES})
     target_compile_options(${OUTPUT_EXE} PRIVATE -m64 -fconcepts -fPIC)
     target_link_libraries(${OUTPUT_EXE} PRIVATE pthread blas lapack)
     set(ITENSOR_LIBFLAGS "-lpthread -L/usr/lib -lblas -llapack -fopenmp")
+    SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
+    SET(GCC_COVERAGE_LINK_FLAGS "--coverage")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
 
     # Link executable with libraries
     target_link_libraries(${OUTPUT_EXE}
