@@ -34,7 +34,7 @@ jobs:
           apt update && \
           apt-get install -y --no-install-recommends python3-pip && \
           pip install gcovr && \
-          gcovr --xml
+          gcovr --xml coverage.xml
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
