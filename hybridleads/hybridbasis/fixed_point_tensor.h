@@ -24,8 +24,8 @@ class FixedPointTensor {
    */
   FixedPointTensor(itensor::MPO const& mpo, int uniform_site,
                    itensor::Args const& args = itensor::Args::global()) {
-    _mpo = mpo;
-    _uniform_site = uniform_site;
+    mpo_ = mpo;
+    uniform_site_ = uniform_site;
     mpo_checker();
     int time_steps = args.getInt("time_steps", 30);
     itensor::Real dt = args.getReal("dt", 1e-12);
@@ -43,27 +43,27 @@ class FixedPointTensor {
 
   itensor::ITensor get(std::string side) {
     std::map<std::string, int> mapper = {{"Left", -1}, {"Right", 1}};
-    return (mapper[side] < 0) ? left_fixpt_tensor : right_fixpt_tensor;
+    return (mapper[side] < 0) ? left_fixpt_tensor_ : right_fixpt_tensor_;
   }
 
  protected:
-  itensor::MPO _mpo;
-  int _uniform_site;
-  itensor::Index left_link, right_link, phys_bond;
-  itensor::ITensor left_fixpt_tensor, right_fixpt_tensor;
-  itensor::Real en, err;
+  itensor::MPO mpo_;
+  int uniform_site_;
+  itensor::Index left_link_, right_link_, phys_bond_;
+  itensor::ITensor left_fixpt_tensor_, right_fixpt_tensor_;
+  itensor::Real en_, err_;
 
   void mpo_checker() {
     int neighbour_site;
-    if (order(_mpo(_uniform_site - 1)) == order(_mpo(_uniform_site))) {
-      neighbour_site = _uniform_site - 1;
-    } else if (order(_mpo(_uniform_site)) == order(_mpo(_uniform_site + 1))) {
-      neighbour_site = _uniform_site + 1;
+    if (order(mpo_(uniform_site_ - 1)) == order(mpo_(uniform_site_))) {
+      neighbour_site = uniform_site_ - 1;
+    } else if (order(mpo_(uniform_site_)) == order(mpo_(uniform_site_ + 1))) {
+      neighbour_site = uniform_site_ + 1;
     } else {
       throw std::invalid_argument(
           "Cannot find any neighbouring sites with same MPO tensor order.");
     }
-    if (!ALLCLOSE(_mpo(_uniform_site), _mpo(neighbour_site))) {
+    if (!ALLCLOSE(mpo_(uniform_site_), mpo_(neighbour_site))) {
       throw std::invalid_argument(
           "The `uniform site` should be picked from the bulk, with at least "
           "one neighbouring MPO tensor being identical with MPO tensor on this "
@@ -72,9 +72,9 @@ class FixedPointTensor {
   }
 
   void get_indices() {
-    left_link = commonIndex(_mpo(_uniform_site - 1), _mpo(_uniform_site));
-    right_link = commonIndex(_mpo(_uniform_site), _mpo(_uniform_site + 1));
-    phys_bond = findIndex(_mpo(_uniform_site), "Site,0");
+    left_link_ = commonIndex(mpo_(uniform_site_ - 1), mpo_(uniform_site_));
+    right_link_ = commonIndex(mpo_(uniform_site_), mpo_(uniform_site_ + 1));
+    phys_bond_ = findIndex(mpo_(uniform_site_), "Site,0");
   }
 
   void itdvp_routine(int time_steps, itensor::Real dt, int max_bond_dim,
@@ -82,21 +82,21 @@ class FixedPointTensor {
                      itensor::Real ortho_tol, int ortho_max_iter,
                      RandGen::SeedType seed) {
     get_indices();
-    auto impo = _mpo(_uniform_site);
+    auto impo = mpo_(uniform_site_);
     auto imps = ITensor();  // ill-defined tensor
     auto [imps_left, imps_right, imps_left_center, imps_center, imps_left_idty,
           imps_right_idty] =
-        itdvp_initial(impo, phys_bond, left_link, right_link, imps,
+        itdvp_initial(impo, phys_bond_, left_link_, right_link_, imps,
                       max_bond_dim, ortho_tol, ortho_max_iter, seed);
     itensor::Args args = {"ErrGoal=", tdvp_tol, "MaxIter", tdvp_max_iter};
     for (int i = 1; i <= time_steps; i++) {
-      std::tie(en, err, left_fixpt_tensor, right_fixpt_tensor) =
+      std::tie(en_, err_, left_fixpt_tensor_, right_fixpt_tensor_) =
           itdvp(impo, imps_left, imps_right, imps_left_center, imps_center,
                 imps_left_idty, imps_right_idty, dt, args);
       LOG(INFO) << std::printf("In time step %o, energy, error = %.3e, %.3e\n",
-                               i, en, err);
+                               i, en_, err_);
       if (args.getReal("ErrGoal") > tdvp_tol) {
-        args.add("ErrGoal=", err * 0.1);
+        args.add("ErrGoal=", err_ * 0.1);
       }
     }
   }
