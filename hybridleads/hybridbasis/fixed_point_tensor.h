@@ -1,20 +1,18 @@
-#ifndef __FIXEDPOINTTENSOR_H__
-#define __FIXEDPOINTTENSOR_H__
+#ifndef HYDRIDBASIS_FIXEDPOINTTENSOR_H_
+#define HYDRIDBASIS_FIXEDPOINTTENSOR_H_
 
 #include <glog/logging.h>
 
+#include "hybridbasis/utils.h"
 #include "itdvp/iTDVP.h"
 #include "itensor/all.h"
-#include "utils.h"
-
-using namespace itensor;
 
 class FixedPointTensor {
  public:
   /**
    * @brief Construct a new Fixed-Point Tensor object.
    *
-   * @param mpo The instance of class: `ITensor::MPO`.
+   * @param mpo The instance of class: `itensor::MPO`.
    * @param uniform_site The site to which there are least one identical MPO
    * tensor in adjacent.
    * @param args Arguments containing the iTDVP parameters with these keywords:
@@ -24,17 +22,17 @@ class FixedPointTensor {
    * @throws `std::invalid_argument` when `uniform_site` does not give any
    * identical MPO tensors as its neighbour.
    */
-  FixedPointTensor(MPO const& mpo, int uniform_site,
-                   Args const& args = Args::global()) {
+  FixedPointTensor(itensor::MPO const& mpo, int uniform_site,
+                   itensor::Args const& args = itensor::Args::global()) {
     _mpo = mpo;
     _uniform_site = uniform_site;
     mpo_checker();
     int time_steps = args.getInt("time_steps", 30);
-    Real dt = args.getReal("dt", 1e-12);
+    itensor::Real dt = args.getReal("dt", 1e-12);
     int max_bond_dim = args.getInt("max_bond_dim", 1);
-    Real tdvp_tol = args.getReal("tdvp_tol", 1e-12);
+    itensor::Real tdvp_tol = args.getReal("tdvp_tol", 1e-12);
     int tdvp_max_iter = args.getInt("tdvp_max_iter", 40);
-    Real ortho_tol = args.getReal("ortho_tol", 1e-12);
+    itensor::Real ortho_tol = args.getReal("ortho_tol", 1e-12);
     int ortho_max_iter = args.getInt("ortho_max_iter", 20);
     RandGen::SeedType seed = args.getInt("seed", 0);
     FLAGS_logtostderr = args.getBool("log_to_std", true);
@@ -43,17 +41,17 @@ class FixedPointTensor {
                   ortho_tol, ortho_max_iter, seed);
   }
 
-  ITensor get(std::string side) {
+  itensor::ITensor get(std::string side) {
     std::map<std::string, int> mapper = {{"Left", -1}, {"Right", 1}};
     return (mapper[side] < 0) ? left_fixpt_tensor : right_fixpt_tensor;
   }
 
  protected:
-  MPO _mpo;
+  itensor::MPO _mpo;
   int _uniform_site;
-  Index left_link, right_link, phys_bond;
-  ITensor left_fixpt_tensor, right_fixpt_tensor;
-  Real en, err;
+  itensor::Index left_link, right_link, phys_bond;
+  itensor::ITensor left_fixpt_tensor, right_fixpt_tensor;
+  itensor::Real en, err;
 
   void mpo_checker() {
     int neighbour_site;
@@ -79,8 +77,9 @@ class FixedPointTensor {
     phys_bond = findIndex(_mpo(_uniform_site), "Site,0");
   }
 
-  void itdvp_routine(int time_steps, Real dt, int max_bond_dim, Real tdvp_tol,
-                     int tdvp_max_iter, Real ortho_tol, int ortho_max_iter,
+  void itdvp_routine(int time_steps, itensor::Real dt, int max_bond_dim,
+                     itensor::Real tdvp_tol, int tdvp_max_iter,
+                     itensor::Real ortho_tol, int ortho_max_iter,
                      RandGen::SeedType seed) {
     get_indices();
     auto impo = _mpo(_uniform_site);
@@ -89,7 +88,7 @@ class FixedPointTensor {
           imps_right_idty] =
         itdvp_initial(impo, phys_bond, left_link, right_link, imps,
                       max_bond_dim, ortho_tol, ortho_max_iter, seed);
-    Args args = {"ErrGoal=", tdvp_tol, "MaxIter", tdvp_max_iter};
+    itensor::Args args = {"ErrGoal=", tdvp_tol, "MaxIter", tdvp_max_iter};
     for (int i = 1; i <= time_steps; i++) {
       std::tie(en, err, left_fixpt_tensor, right_fixpt_tensor) =
           itdvp(impo, imps_left, imps_right, imps_left_center, imps_center,

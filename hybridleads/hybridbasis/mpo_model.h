@@ -1,12 +1,10 @@
-#ifndef __MPOMODEL_H__
-#define __MPOMODEL_H__
+#ifndef HYDRIDBASIS_MPOMODEL_H_
+#define HYDRIDBASIS_MPOMODEL_H_
 
 #include <armadillo>
 
 #include "itensor/all.h"
 #include "kbasis/OneParticleBasis.h"
-
-using namespace itensor;
 
 class MPOModel {
  public:
@@ -17,13 +15,13 @@ class MPOModel {
    * @param left_size
    * @param system_size
    * @param right_size
-   * @throws `invalid_argument` when lead size is less than 4.
+   * @throws `std::invalid_argument` when lead size is less than 4.
    * @note User should implement the virtual member functions in child class.
    */
   MPOModel(int left_size, int system_size, int right_size) {
-    if ((left_size < 4) || (right_size < 4)) {
+    if ((left_size < 2) || (right_size < 2)) {
       throw std::invalid_argument(
-          "Lead size should be equal or greater than 4.");
+          "Lead size should be equal or greater than 2.");
     }
     n_left = left_size;
     n_sys = system_size;
@@ -43,13 +41,13 @@ class MPOModel {
    * @brief Return `SiteSet` of this model.
    * @returns SiteSet
    */
-  SiteSet sites() { return _sites; }
+  itensor::SiteSet sites() { return _sites; }
 
   /**
    * @brief Return the `AutoMPO` instance in hybrid basis.
    * @returns MPO
    */
-  MPO mpo() { return toMPO(ampo); }
+  itensor::MPO mpo() { return itensor::toMPO(ampo); }
 
   /**
    * @brief Return the single particle Hamiltonian in "standard" basis.
@@ -65,8 +63,8 @@ class MPOModel {
 
  protected:
   int n_left, n_sys, n_right, n_tot;
-  SiteSet _sites;
-  AutoMPO ampo;
+  itensor::SiteSet _sites;
+  itensor::AutoMPO ampo;
   arma::mat sp_ham;
   arma::mat hybrid_ham;
 
@@ -105,7 +103,7 @@ class TightBinding : public MPOModel {
    * `"ConserveQNs"` passed to class: `ITensor::FermionSite`, default false.
    */
   TightBinding(int left_size, int system_size, int right_size,
-               Args const& args = Args::global())
+               itensor::Args const& args = itensor::Args::global())
       : MPOModel(left_size, system_size, right_size) {
     t_left = args.getReal("t_left", 0.0);
     t_left_sys = args.getReal("t_left_sys", 0.0);
@@ -116,16 +114,16 @@ class TightBinding : public MPOModel {
     mu_sys = args.getReal("mu_sys", 0.0);
     mu_right = args.getReal("mu_right", 0.0);
     bool conserve_qns = args.getBool("ConserveQNs", false);
-    _sites = Fermion(n_tot, {"ConserveQNs", conserve_qns});
-    ampo = AutoMPO(_sites);
+    _sites = itensor::Fermion(n_tot, {"ConserveQNs", conserve_qns});
+    ampo = itensor::AutoMPO(_sites);
     gen_auto_mpo();
   }
 
  protected:
-  Real t_left, t_left_sys, t_sys, t_right_sys, t_right;
-  Real mu_left, mu_sys, mu_right;
+  itensor::Real t_left, t_left_sys, t_sys, t_right_sys, t_right;
+  itensor::Real mu_left, mu_sys, mu_right;
 
-  arma::mat block_tight_binding_ham(int n, Real t, Real mu) {
+  arma::mat block_tight_binding_ham(int n, itensor::Real t, itensor::Real mu) {
     auto elems = tight_binding_Hamilt(n, t, mu);
     arma::mat block_ham(&elems(0, 0), n, n);
     return block_ham;
@@ -166,14 +164,14 @@ class TightBinding : public MPOModel {
 class AndersonImpurity : public MPOModel {
  public:
   AndersonImpurity(int left_size, int system_size, int right_size,
-                   Args const& args)
+                   itensor::Args const& args)
       : MPOModel(left_size, system_size, right_size) {}
 };
 
 class KondoImpurity : public MPOModel {
  public:
   KondoImpurity(int left_size, int system_size, int right_size,
-                Args const& args)
+                itensor::Args const& args)
       : MPOModel(left_size, system_size, right_size) {}
 };
 
