@@ -11,11 +11,7 @@
 using namespace itensor;
 using namespace Catch;
 
-TEST_CASE("Check single particle hamiltonian",
-          "[TestTightBindingSingleParticleHam]") {
-  int n_left = 4;
-  int n_sys = 3;
-  int n_right = 4;
+TEST_CASE("Check single particle hamiltonian", "[TestTightBindingSingleParticleHam]") {
   int n_tot = n_left + n_sys + n_right;
   Real t = 0.5;
   Real mu = 0.1;
@@ -28,7 +24,7 @@ TEST_CASE("Check single particle hamiltonian",
   TightBinding model(n_left, n_sys, n_right, args);
   arma::mat ham = model.single_particle_ham();
   arma::umat elem_wise_comparison = (ham == expected_ham);
-  CHECK(arma::all(arma::vectorise(elem_wise_comparison) == 1));
+  CHECK(arma::all(arma::vectorise(elem_wise_comparison) == true));
 }
 
 TEST_CASE("Check MPO on real space parts", "[TestTightBindingMPO]") {
@@ -36,9 +32,8 @@ TEST_CASE("Check MPO on real space parts", "[TestTightBindingMPO]") {
   int n_sys = GENERATE(2, 3, 4);
   int n_right = n_left;
   int n_tot = n_left + n_sys + n_right;
-  Args args = {"t_left",      0.5, "t_left_sys", 0.5, "t_sys",   0.5,
-               "t_right_sys", 0.5, "t_right",    0.5, "mu_left", 1.0,
-               "mu_sys",      0.5, "mu_right",   0.1};
+  Args args = {"t_left",  0.5, "t_left_sys", 0.5, "t_sys",  0.5, "t_right_sys", 0.5,
+               "t_right", 0.5, "mu_left",    1.0, "mu_sys", 0.5, "mu_right",    0.1};
   TightBinding model(n_left, n_sys, n_right, args);
   auto H = model.mpo();
   for (int i = 2; i < n_left - 1; ++i) {
@@ -49,15 +44,13 @@ TEST_CASE("Check MPO on real space parts", "[TestTightBindingMPO]") {
   }
 }
 
-TEST_CASE("Check ground state energies are consistent",
-          "[TestTightBindingGS]") {
+TEST_CASE("Check ground state energies are consistent", "[TestTightBindingGS]") {
   int n_left = GENERATE(4, 6);
   int n_sys = GENERATE(2, 3, 4);
   int n_right = n_left;
   int n_tot = n_left + n_sys + n_right;
-  Args args = {"t_left",      0.5, "t_left_sys", 0.5, "t_sys",   0.5,
-               "t_right_sys", 0.5, "t_right",    0.5, "mu_left", 1.0,
-               "mu_sys",      0.5, "mu_right",   0.1};
+  Args args = {"t_left",  0.5, "t_left_sys", 0.5, "t_sys",  0.5, "t_right_sys", 0.5,
+               "t_right", 0.5, "mu_left",    1.0, "mu_sys", 0.5, "mu_right",    0.1};
   TightBinding model(n_left, n_sys, n_right, args);
   auto H = model.mpo();
   auto sites = model.sites();
