@@ -7,7 +7,10 @@ WORKDIR $WORKDIR
 COPY . $WORKDIR
 
 # Set up compiling flags for ITensor, and the shared lib path
-ENV CCCOM="g++ -m64 -std=c++17 -fconcepts -fPIC" \
+ENV LANG="en_US.UTF-8" \
+    LANGUAGE="en_US:en" \
+    LC_ALL="en_US.UTF-8" \
+    CCCOM="g++ -m64 -std=c++17 -fconcepts -fPIC" \
     PLATFORM="lapack" \
     BLAS_LAPACK_LIBFLAGS="-lpthread -L/usr/lib -lblas -llapack" \
     LD_LIBRARY_PATH="/usr/local/lib"
@@ -18,6 +21,7 @@ FROM base as runtime
 # Install cmake, lapack, blas
 RUN apt update && \
     apt-get install -y --no-install-recommends \
+    locales \
     cmake \
     # gdb \
     liblapack-dev \
