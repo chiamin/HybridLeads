@@ -30,6 +30,16 @@ find_package(Catch2 3 REQUIRED)
 # Include trompeloeil for mocking in unit test
 find_package(trompeloeil REQUIRED)
 
+# Code coverage
+option(USE_COVERAGE "Use coverage reports" OFF)
+if(USE_COVERAGE)
+    set(CMAKE_BUILD_TYPE Coverage)
+    SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
+    SET(GCC_COVERAGE_LINK_FLAGS "--coverage")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
+endif(USE_COVERAGE)
+
 # Name all your sources filename here without extension
 set(SOURCES_FILES
     kbasis/test_one_particle_basis.cpp
@@ -49,12 +59,6 @@ foreach(SOURCE_PATH ${SOURCES_FILES})
     target_compile_options(${OUTPUT_EXE} PRIVATE -m64 -fconcepts -fPIC)
     target_link_libraries(${OUTPUT_EXE} PRIVATE pthread blas lapack)
     set(ITENSOR_LIBFLAGS "-lpthread -L/usr/lib -lblas -llapack -fopenmp")
-    if(USE_COVERAGE)
-        SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
-        SET(GCC_COVERAGE_LINK_FLAGS "--coverage")
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
-        SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
-    endif(USE_COVERAGE)
 
     # Link executable with libraries
     target_link_libraries(${OUTPUT_EXE}
@@ -67,4 +71,5 @@ foreach(SOURCE_PATH ${SOURCES_FILES})
 
     add_test(NAME ${OUTPUT_EXE} COMMAND ${OUTPUT_EXE})
 endforeach()
+
 unset(USE_COVERAGE CACHE)
