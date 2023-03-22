@@ -21,13 +21,12 @@ jobs:
       - name: Build
         run: |
           cmake -S tests -B ${{ env.build_dir }} -DUSE_COVERAGE=ON
-          make -C ${{ env.build_dir }}
+          cmake --build ${{ env.build_dir }}
 
       - name: Unit Test
         run: |
-          for filename in ${{ env.build_dir }}/test_*.exe; do
-            ./"$filename" || continue
-          done
+          cd ${{ env.build_dir }}
+          ctest -j 2 --verbose
 
       - name: Generate coverage reports
         run: |
