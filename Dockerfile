@@ -23,6 +23,7 @@ RUN apt update && \
     apt-get install -y --no-install-recommends \
     locales \
     cmake \
+    ninja-build \
     # gdb \
     liblapack-dev \
     liblapacke-dev \
