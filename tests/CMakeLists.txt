@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(Unittest LANGUAGES CXX)
-# set(CMAKE_BUILD_TYPE RelWithDebInfo)
+enable_testing()
 set(ITENSOR_DIR "/root/itensor")
 
 # Include module headers
@@ -64,5 +64,7 @@ foreach(SOURCE_PATH ${SOURCES_FILES})
         Catch2::Catch2WithMain
         trompeloeil::trompeloeil
     )
+
+    add_test(NAME ${OUTPUT_EXE} COMMAND ${OUTPUT_EXE})
 endforeach()
 unset(USE_COVERAGE CACHE)
