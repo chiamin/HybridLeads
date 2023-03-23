@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
-#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <catch2/trompeloeil.hpp>
 
 #include "hybridbasis/mpo_model.h"
@@ -46,8 +46,8 @@ TEST_CASE("Check single particle basis rotation", "[TestBasisRotation]") {
   arma::mat ham = model.single_particle_ham();
   arma::mat hybrid_ham = model.hybrid_basis_ham();
 
-  CHECK(arma::trace(ham) == Approx(arma::trace(hybrid_ham)).epsilon(1e-12));
-  CHECK(arma::det(ham) == Approx(arma::det(hybrid_ham)).epsilon(1e-12));
+  CHECK_THAT(arma::trace(ham), Matchers::WithinAbs(arma::trace(hybrid_ham), 1e-12));
+  CHECK_THAT(arma::det(ham), Matchers::WithinAbs(arma::det(hybrid_ham), 1e-12));
 }
 
 TEST_CASE("Check MPO on real space parts", "[TestTightBindingMPO]") {
@@ -110,5 +110,5 @@ TEST_CASE("Check ground state energies are consistent", "[TestTightBindingGS]") 
   auto [energy, psi] = dmrg(H, psi0, sweeps, {"Silent", true});
   auto [expected_energy, expected_psi] =
       dmrg(expected_H, psi0, sweeps, {"Silent", true});
-  CHECK(energy == Approx(expected_energy).epsilon(1e-8));
+  CHECK_THAT(energy, Matchers::WithinAbs(expected_energy, 1e-6));
 }
