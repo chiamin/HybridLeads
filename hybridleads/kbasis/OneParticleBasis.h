@@ -23,8 +23,7 @@ itensor::Matrix tight_binding_Hamilt(
     int L, Real t, Real mu, Real damp_fac = 1., bool damp_from_right = true,
     bool verbose = false
 ) {
-itensor:
-  Matrix H(L, L);
+  itensor::Matrix H(L, L);
   for (int i = 0; i < L; i++) {
     H(i, i) = -mu;
     if (i != L - 1) {
