@@ -30,6 +30,26 @@ TEST_CASE("Check single particle hamiltonian", "[TestTightBindingSingleParticleH
   CHECK(arma::all(arma::vectorise(elem_wise_comparison) == true));
 }
 
+TEST_CASE("Check single particle basis rotation", "[TestBasisRotation]") {
+  int n_left = GENERATE(4, 6);
+  int n_sys = GENERATE(2, 3, 4);
+  int n_right = n_left;
+  int n_tot = n_left + n_sys + n_right;
+  Real t = 0.5;
+  Real mu_left = GENERATE(0.0, 0.1);
+  Real mu_sys = GENERATE(0.0, 0.1);
+  Real mu_right = GENERATE(0.0, 0.1);
+  Args args = {"t_left",      t,      "t_left_sys", t,       "t_sys",   t,
+               "t_right_sys", t,      "t_right",    t,       "mu_left", mu_left,
+               "mu_sys",      mu_sys, "mu_right",   mu_right};
+  TightBinding model(n_left, n_sys, n_right, args);
+  arma::mat ham = model.single_particle_ham();
+  arma::mat hybrid_ham = model.hybrid_basis_ham();
+
+  CHECK(arma::trace(ham) == Approx(arma::trace(hybrid_ham)).epsilon(1e-12));
+  CHECK(arma::det(ham) == Approx(arma::det(hybrid_ham)).epsilon(1e-12));
+}
+
 TEST_CASE("Check MPO on real space parts", "[TestTightBindingMPO]") {
   int n_left = GENERATE(4, 6);
   int n_sys = GENERATE(2, 3, 4);
