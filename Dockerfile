@@ -27,7 +27,8 @@ RUN apt update && \
     # gdb \
     liblapack-dev \
     liblapacke-dev \
-    libopenblas-dev
+
+RUN locale-gen en_US.UTF-8
 
 # Copy external dependencies from git submodules into $PKGDIR
 COPY ext $PKGDIR
