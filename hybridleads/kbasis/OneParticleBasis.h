@@ -19,9 +19,10 @@ using namespace std;
  * @param verbose Print out the matrix elements.
  * @returns Matrix - The Hamiltonian matrix, which is tridiagonal.
  */
-Matrix tight_binding_Hamilt(int L, Real t, Real mu, Real damp_fac = 1.,
-                            bool damp_from_right = true, bool verbose = false) {
-  cout << "L = " << L << endl;
+Matrix tight_binding_Hamilt(
+    int L, Real t, Real mu, Real damp_fac = 1., bool damp_from_right = true,
+    bool verbose = false
+) {
   Matrix H(L, L);
   for (int i = 0; i < L; i++) {
     H(i, i) = -mu;
@@ -42,9 +43,10 @@ class OneParticleBasis {
   OneParticleBasis(const string& name, const Matrix& H) : _name(name), _H(H) {
     diagHermitian(H, _Uik, _ens);
   }
-  OneParticleBasis(const string& name, int L, Real t, Real mu,
-                   Real damp_fac = 1., bool damp_from_right = true,
-                   bool verbose = false)
+  OneParticleBasis(
+      const string& name, int L, Real t, Real mu, Real damp_fac = 1.,
+      bool damp_from_right = true, bool verbose = false
+  )
       : _name(name) {
     _H = tight_binding_Hamilt(L, t, mu, damp_fac, damp_from_right, verbose);
     diagHermitian(_H, _Uik, _ens);
