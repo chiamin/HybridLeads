@@ -72,8 +72,8 @@ TEST_CASE("Check ground state energies are consistent", "[TestTightBindingGS]") 
   int n_sys = GENERATE(2, 3, 4);
   int n_right = n_left;
   int n_tot = n_left + n_sys + n_right;
-  Args args = {"t_left",  0.5, "t_left_sys", 0.5, "t_sys",  0.5, "t_right_sys", 0.5,
-               "t_right", 0.5, "mu_left",    1.0, "mu_sys", 0.5, "mu_right",    0.1};
+  Args args = {"t_left",  0.5, "t_left_sys", 0.01, "t_sys",  0.5, "t_right_sys", 0.01,
+               "t_right", 0.5, "mu_left",    0.2,  "mu_sys", 0.1, "mu_right",    0.0};
   TightBinding model(n_left, n_sys, n_right, args);
   auto H = model.mpo();
   auto sites = model.sites();
@@ -110,5 +110,5 @@ TEST_CASE("Check ground state energies are consistent", "[TestTightBindingGS]") 
   auto [energy, psi] = dmrg(H, psi0, sweeps, {"Silent", true});
   auto [expected_energy, expected_psi] =
       dmrg(expected_H, psi0, sweeps, {"Silent", true});
-  CHECK_THAT(energy, Matchers::WithinAbs(expected_energy, 1e-6));
+  CHECK_THAT(energy, Matchers::WithinAbs(expected_energy, 1e-8));
 }
