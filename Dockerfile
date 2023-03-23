@@ -27,8 +27,16 @@ RUN apt update && \
     # gdb \
     liblapack-dev \
     liblapacke-dev \
+    libopenblas-dev \
+    llvm \
+    clang-format \
+    clang-tidy \
+    cppcheck \
+    iwyu \
+    python3-pip
 
-RUN locale-gen en_US.UTF-8
+RUN locale-gen en_US.UTF-8 && \
+    pip install cpplint pre-commit
 
 # Copy external dependencies from git submodules into $PKGDIR
 COPY ext $PKGDIR
