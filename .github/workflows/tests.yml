@@ -23,16 +23,15 @@ jobs:
           cmake -S tests -B ${{ env.build_dir }} -G Ninja -DUSE_COVERAGE=ON
           cmake --build ${{ env.build_dir }}
 
-      - name: Unit Test
-        run: |
-          cd ${{ env.build_dir }}
-          ctest -j 2 --verbose
-
-      - name: Generate coverage reports
+      - name: Install coverage reporter
         run: |
           apt update
           apt-get install -y --no-install-recommends python3-pip
           pip install gcovr
+
+      - name: Unit test and generate coverage reports
+        run: |
+          (cd ${{ env.build_dir }} && ctest -j 2 --verbose)
           gcovr -r hybridleads/ tests/ --verbose --xml coverage.xml
 
       - name: Upload coverage reports to Codecov
