@@ -30,9 +30,9 @@ jobs:
 
       - name: Generate coverage reports
         run: |
-          apt update && \
-          apt-get install -y --no-install-recommends python3-pip && \
-          pip install gcovr && \
+          apt update
+          apt-get install -y --no-install-recommends python3-pip
+          pip install gcovr
           gcovr -r hybridleads/ tests/ --xml coverage.xml
 
       - name: Upload coverage reports to Codecov
