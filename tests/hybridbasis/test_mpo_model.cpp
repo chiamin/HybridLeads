@@ -12,9 +12,12 @@ using namespace itensor;
 using namespace Catch;
 
 TEST_CASE("Check single particle hamiltonian", "[TestTightBindingSingleParticleHam]") {
+  int n_left = GENERATE(4, 6);
+  int n_sys = GENERATE(2, 3, 4);
+  int n_right = n_left;
   int n_tot = n_left + n_sys + n_right;
   Real t = 0.5;
-  Real mu = 0.1;
+  Real mu = GENERATE(0.0, 0.1);
 
   auto elems = tight_binding_Hamilt(n_tot, t, mu);
   arma::mat expected_ham(&elems(0, 0), n_tot, n_tot);
