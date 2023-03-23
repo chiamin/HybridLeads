@@ -48,6 +48,16 @@ class FixedPointTensor {
     return (mapper[side] < 0) ? left_fixpt_tensor_ : right_fixpt_tensor_;
   }
 
+  itensor::Index get_mpo_virtual_idx(std::string side) {
+    return itensor::commonIndex(get(side), mpo_(uniform_site_));
+  }
+
+  itensor::Index get_mps_virtual_idx(std::string side) {
+    return itensor::uniqueInds(get(side), mpo_(uniform_site_))(1);
+  }
+
+  int uniform_site() { return uniform_site_; }
+
  protected:
   itensor::MPO mpo_;
   int uniform_site_;
