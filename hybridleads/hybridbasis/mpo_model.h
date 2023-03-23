@@ -20,8 +20,7 @@ class MPOModel {
    */
   MPOModel(int left_size, int system_size, int right_size) {
     if ((left_size < 2) || (right_size < 2)) {
-      throw std::invalid_argument(
-          "Lead size should be equal or greater than 2.");
+      throw std::invalid_argument("Lead size should be equal or greater than 2.");
     }
     n_left_ = left_size;
     n_sys_ = system_size;
@@ -75,12 +74,12 @@ class MPOModel {
   void basis_transformer() {
     arma::vec evals;
     arma::mat evecs;
-    arma::mat sub_ham_mat = sp_ham_.submat(
-        n_left_, n_left_, n_left_ + n_sys_ - 1, n_left_ + n_sys_ - 1);
+    arma::mat sub_ham_mat =
+        sp_ham_.submat(n_left_, n_left_, n_left_ + n_sys_ - 1, n_left_ + n_sys_ - 1);
     arma::eig_sym(evals, evecs, sub_ham_mat);
     arma::mat unitary_mat = arma::eye(n_tot_, n_tot_);
-    unitary_mat.submat(n_left_, n_left_, n_left_ + n_sys_ - 1,
-                       n_left_ + n_sys_ - 1) = evecs;
+    unitary_mat.submat(n_left_, n_left_, n_left_ + n_sys_ - 1, n_left_ + n_sys_ - 1) =
+        evecs;
     hybrid_ham_ = unitary_mat.t() * sp_ham_ * unitary_mat;
   }
 
@@ -102,8 +101,10 @@ class TightBinding : public MPOModel {
    * `"t_right"` (2) on-site energies: `"mu_left"`, `"mu_sys"`, `"mu_right"` (3)
    * `"ConserveQNs"` passed to class: `ITensor::FermionSite`, default false.
    */
-  TightBinding(int left_size, int system_size, int right_size,
-               itensor::Args const& args = itensor::Args::global())
+  TightBinding(
+      int left_size, int system_size, int right_size,
+      itensor::Args const& args = itensor::Args::global()
+  )
       : MPOModel(left_size, system_size, right_size) {
     t_left_ = args.getReal("t_left", 0.0);
     t_left_sys_ = args.getReal("t_left_sys", 0.0);
@@ -135,8 +136,8 @@ class TightBinding : public MPOModel {
     arma::mat block_22 = block_tight_binding_ham(n_sys_, t_sys_, mu_sys_);
     arma::mat block_33 = block_tight_binding_ham(n_right_, t_right_, mu_right_);
     sp_ham_.submat(0, 0, n_left_ - 1, n_left_ - 1) = block_11;
-    sp_ham_.submat(n_left_, n_left_, n_left_ + n_sys_ - 1,
-                   n_left_ + n_sys_ - 1) = block_22;
+    sp_ham_.submat(n_left_, n_left_, n_left_ + n_sys_ - 1, n_left_ + n_sys_ - 1) =
+        block_22;
     sp_ham_.submat(n_left_ + n_sys_, n_left_ + n_sys_, n_tot_ - 1, n_tot_ - 1) =
         block_33;
     sp_ham_(n_left_ - 1, n_left_) = -t_left_sys_;
@@ -163,15 +164,17 @@ class TightBinding : public MPOModel {
 
 class AndersonImpurity : public MPOModel {
  public:
-  AndersonImpurity(int left_size, int system_size, int right_size,
-                   itensor::Args const& args)
+  AndersonImpurity(
+      int left_size, int system_size, int right_size, itensor::Args const& args
+  )
       : MPOModel(left_size, system_size, right_size) {}
 };
 
 class KondoImpurity : public MPOModel {
  public:
-  KondoImpurity(int left_size, int system_size, int right_size,
-                itensor::Args const& args)
+  KondoImpurity(
+      int left_size, int system_size, int right_size, itensor::Args const& args
+  )
       : MPOModel(left_size, system_size, right_size) {}
 };
 
