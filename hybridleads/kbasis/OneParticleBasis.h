@@ -5,7 +5,6 @@
 #include "itensor/all.h"
 
 using Real = itensor::Real;
-using tuple = std::tuple;
 
 /**
  * @brief Generate the tight-binding Hamiltonian in single particle basis.
@@ -58,7 +57,7 @@ class OneParticleBasis {
 
   // Functions that every basis class must have
   const string& name() const { return _name; }
-  std::vector<tuple<int, auto, bool>> C_op(int i, bool dag) const;
+  std::vector<std::tuple<int, auto, bool>> C_op(int i, bool dag) const;
   Real en(int k) const {
     mycheck(k > 0 and k <= _ens.size(), "out of range");
     return _ens(k - 1);
@@ -99,11 +98,12 @@ class OneParticleBasis {
  * ascending order, coefficient U_ik, and whether the operator has a dagger or
  * not.
  */
-std::vector<tuple<int, auto, bool>> OneParticleBasis ::C_op(int i, bool dag) const {
+std::vector<std::tuple<int, auto, bool>> OneParticleBasis ::C_op(int i, bool dag)
+    const {
   mycheck(i > 0 and i <= nrows(_Uik), "out of range");
 
   auto tmp = _Uik(0, 0);
-  std::vector<tuple<int, decltype(tmp), bool>> k_coef_dag;
+  std::vector<std::tuple<int, decltype(tmp), bool>> k_coef_dag;
 
   for (int k = 0; k < this->size(); k++)  // Here k is zero-index
   {
