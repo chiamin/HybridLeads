@@ -1,5 +1,5 @@
-#ifndef __ONEPARTICLEBASIS_H_CMC__
-#define __ONEPARTICLEBASIS_H_CMC__
+#ifndef KBASIS_ONEPARTICLEBASIS_H_
+#define KBASIS_ONEPARTICLEBASIS_H_
 
 #include "GeneralUtility.h"
 #include "itensor/all.h"
