@@ -16,11 +16,11 @@ jobs:
 
       - name: Set up building directory
         run: |
-          echo "build_dir=tests/build" >> $GITHUB_ENV
+          echo "build_dir=tests/build/" >> $GITHUB_ENV
 
       - name: Build
         run: |
-          cmake -S tests -B ${{ env.build_dir }} -G Ninja -DUSE_COVERAGE=ON
+          cmake -S tests/ -B ${{ env.build_dir }} -G Ninja -DUSE_COVERAGE=ON
           cmake --build ${{ env.build_dir }}
 
       - name: Install coverage reporter
