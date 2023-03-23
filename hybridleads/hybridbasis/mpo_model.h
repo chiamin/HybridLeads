@@ -6,6 +6,8 @@
 #include "itensor/all.h"
 #include "kbasis/OneParticleBasis.h"
 
+using Real = itensor::Real;
+
 class MPOModel {
  public:
   /**
@@ -121,10 +123,10 @@ class TightBinding : public MPOModel {
   }
 
  protected:
-  itensor::Real t_left_, t_left_sys_, t_sys_, t_right_sys_, t_right_;
-  itensor::Real mu_left_, mu_sys_, mu_right_;
+  Real t_left_, t_left_sys_, t_sys_, t_right_sys_, t_right_;
+  Real mu_left_, mu_sys_, mu_right_;
 
-  arma::mat block_tight_binding_ham(int n, itensor::Real t, itensor::Real mu) {
+  arma::mat block_tight_binding_ham(int n, Real t, Real mu) {
     auto elems = tight_binding_Hamilt(n, t, mu);
     arma::mat block_ham(&elems(0, 0), n, n);
     return block_ham;

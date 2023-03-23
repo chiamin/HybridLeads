@@ -7,6 +7,8 @@
 #include "itdvp/iTDVP.h"
 #include "itensor/all.h"
 
+using Real = itensor::Real;
+
 class FixedPointTensor {
  public:
   /**
@@ -30,11 +32,11 @@ class FixedPointTensor {
     uniform_site_ = uniform_site;
     mpo_checker();
     int time_steps = args.getInt("time_steps", 30);
-    itensor::Real dt = args.getReal("dt", 1e-12);
+    Real dt = args.getReal("dt", 1e-12);
     int max_bond_dim = args.getInt("max_bond_dim", 1);
-    itensor::Real tdvp_tol = args.getReal("tdvp_tol", 1e-12);
+    Real tdvp_tol = args.getReal("tdvp_tol", 1e-12);
     int tdvp_max_iter = args.getInt("tdvp_max_iter", 40);
-    itensor::Real ortho_tol = args.getReal("ortho_tol", 1e-12);
+    Real ortho_tol = args.getReal("ortho_tol", 1e-12);
     int ortho_max_iter = args.getInt("ortho_max_iter", 20);
     RandGen::SeedType seed = args.getInt("seed", 0);
     itdvp_routine(
@@ -63,7 +65,7 @@ class FixedPointTensor {
   int uniform_site_;
   itensor::Index mpo_left_idx_, mpo_right_idx_, phys_idx_;
   itensor::ITensor left_fixpt_tensor_, right_fixpt_tensor_;
-  itensor::Real en_, err_;
+  Real en_, err_;
 
   void mpo_checker() {
     int neighbour_site;
@@ -93,9 +95,8 @@ class FixedPointTensor {
   }
 
   void itdvp_routine(
-      int time_steps, itensor::Real dt, int max_bond_dim, itensor::Real tdvp_tol,
-      int tdvp_max_iter, itensor::Real ortho_tol, int ortho_max_iter,
-      RandGen::SeedType seed
+      int time_steps, Real dt, int max_bond_dim, Real tdvp_tol, int tdvp_max_iter,
+      Real ortho_tol, int ortho_max_iter, RandGen::SeedType seed
   ) {
     get_indices();
     auto impo = mpo_(uniform_site_);

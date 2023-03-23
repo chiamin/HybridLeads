@@ -4,8 +4,8 @@
 #include "GeneralUtility.h"
 #include "itensor/all.h"
 
-using namespace itensor;
-using namespace std;
+using Real = itensor::Real;
+using tuple = std::tuple;
 
 /**
  * @brief Generate the tight-binding Hamiltonian in single particle basis.
@@ -19,19 +19,20 @@ using namespace std;
  * @param verbose Print out the matrix elements.
  * @returns Matrix - The Hamiltonian matrix, which is tridiagonal.
  */
-Matrix tight_binding_Hamilt(
+itensor::Matrix tight_binding_Hamilt(
     int L, Real t, Real mu, Real damp_fac = 1., bool damp_from_right = true,
     bool verbose = false
 ) {
+itensor:
   Matrix H(L, L);
   for (int i = 0; i < L; i++) {
     H(i, i) = -mu;
     if (i != L - 1) {
       int damp_dist = (damp_from_right ? L - 2 - i : i);
-      Real ti = t * pow(damp_fac, damp_dist);
+      Real ti = t * std::pow(damp_fac, damp_dist);
       H(i, i + 1) = -ti;
       H(i + 1, i) = -ti;
-      if (verbose) cout << "Hk, t " << i << " = " << ti << endl;
+      if (verbose) std::cout << "Hk, t " << i << " = " << ti << std::endl;
     }
   }
   return H;
@@ -40,8 +41,8 @@ Matrix tight_binding_Hamilt(
 class OneParticleBasis {
  public:
   OneParticleBasis() {}
-  OneParticleBasis(const string& name, const Matrix& H) : _name(name), _H(H) {
-    diagHermitian(H, _Uik, _ens);
+  OneParticleBasis(const string& name, const itensor::Matrix& H) : _name(name), _H(H) {
+    itensor::diagHermitian(H, _Uik, _ens);
   }
   OneParticleBasis(
       const string& name, int L, Real t, Real mu, Real damp_fac = 1.,
@@ -49,16 +50,16 @@ class OneParticleBasis {
   )
       : _name(name) {
     _H = tight_binding_Hamilt(L, t, mu, damp_fac, damp_from_right, verbose);
-    diagHermitian(_H, _Uik, _ens);
+    itensor::diagHermitian(_H, _Uik, _ens);
   }
   OneParticleBasis(const string& name, int L) : _name(name) {
-    _H = Matrix(L, L);
-    diagHermitian(_H, _Uik, _ens);
+    _H = itensor::Matrix(L, L);
+    itensor::diagHermitian(_H, _Uik, _ens);
   }
 
   // Functions that every basis class must have
   const string& name() const { return _name; }
-  vector<tuple<int, auto, bool>> C_op(int i, bool dag) const;
+  std::vector<tuple<int, auto, bool>> C_op(int i, bool dag) const;
   Real en(int k) const {
     mycheck(k > 0 and k <= _ens.size(), "out of range");
     return _ens(k - 1);
@@ -82,8 +83,8 @@ class OneParticleBasis {
 
  private:
   string _name;
-  Matrix _Uik, _H;
-  Vector _ens;
+  itensor::Matrix _Uik, _H;
+  itensor::Vector _ens;
 };
 
 /**
@@ -99,11 +100,11 @@ class OneParticleBasis {
  * ascending order, coefficient U_ik, and whether the operator has a dagger or
  * not.
  */
-vector<tuple<int, auto, bool>> OneParticleBasis ::C_op(int i, bool dag) const {
+std::vector<tuple<int, auto, bool>> OneParticleBasis ::C_op(int i, bool dag) const {
   mycheck(i > 0 and i <= nrows(_Uik), "out of range");
 
   auto tmp = _Uik(0, 0);
-  vector<tuple<int, decltype(tmp), bool>> k_coef_dag;
+  std::vector<tuple<int, decltype(tmp), bool>> k_coef_dag;
 
   for (int k = 0; k < this->size(); k++)  // Here k is zero-index
   {
