@@ -41,13 +41,15 @@ if(USE_COVERAGE)
 endif(USE_COVERAGE)
 
 # Name all your sources filename here without extension
-set(SOURCES_FILES
-    kbasis/test_one_particle_basis.cpp
-    kbasis/test_hamiltonian.cpp
+# set(SOURCES_FILES
+    # kbasis/test_one_particle_basis.cpp
+    # kbasis/test_hamiltonian.cpp
     # itdvp/test_itdvp.cpp
-    hybridbasis/test_mpo_model.cpp
-)
-option(USE_COVERAGE "Use coverage reports" OFF)
+    # hybridbasis/test_mpo_model.cpp
+    # hybridbasis/test_fixed_point_tensor.cpp
+    # hybridbasis/test_gluon.cpp
+# )
+file(GLOB_RECURSE SOURCES_FILES test_*.cpp)
 foreach(SOURCE_PATH ${SOURCES_FILES})
     # Define sources and output executable
     get_filename_component(SOURCE ${SOURCE_PATH} NAME)
