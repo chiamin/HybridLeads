@@ -32,7 +32,12 @@ jobs:
       - name: Unit test and generate coverage reports
         run: |
           (cd ${{ env.build_dir }} && ctest -j 2 --verbose)
-          gcovr -r hybridleads/ ${{ env.build_dir }} --verbose --xml coverage.xml
+          # gcovr -r hybridleads/ ${{ env.build_dir }} --verbose --xml coverage.xml
+
+      - name: Generate a code coverage report
+        uses: threeal/gcovr-action@latest
+        with:
+          root: hybridleads/
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
