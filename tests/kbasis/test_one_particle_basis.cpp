@@ -1,7 +1,7 @@
 #include <armadillo>
 #include <catch2/catch_all.hpp>
-#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <catch2/trompeloeil.hpp>
 
 #include "hybridbasis/utils.h"
@@ -22,7 +22,7 @@ TEST_CASE(
       {-mu, -t, 0.0, 0.0}, {-t, -mu, -t, 0.0}, {0.0, -t, -mu, -t}, {0.0, 0.0, -t, -mu}};
   arma::mat ham_mat(&ham_elems(0, 0), mat_dim, mat_dim);
   arma::mat expected_mat(&expected_elems[0][0], mat_dim, mat_dim);
-  CHECK(approx_equal(ham_mat, expected_mat, "absdiff", 1e-12));
+  CHECK(arma::approx_equal(ham_mat, expected_mat, "absdiff", 1e-12));
 }
 
 TEST_CASE("Check one particle basis", "[OneParticleBasis]") {
@@ -104,7 +104,7 @@ TEST_CASE("Check AutoMPO in real space basis", "[RealSpaceBasis]") {
   double min_en = *min_element(ens.begin(), ens.end());
 
   // Compare ED ground state energy with DMRG
-  CHECK(min_en == Approx(energy).epsilon(1e-8));
+  CHECK_THAT(min_en, Matchers::WithinAbs(energy, 1e-8));
 }
 
 TEST_CASE("Check AutoMPO in hybrid basis by DMRG", "[HybridBasisDMRG]") {
@@ -194,7 +194,7 @@ TEST_CASE("Check AutoMPO in hybrid basis by DMRG", "[HybridBasisDMRG]") {
   auto [energy, psi] = dmrg(H, psi0, sweeps, {"Silent", true});
   auto [expected_energy, expected_psi] =
       dmrg(expected_H, psi0, sweeps, {"Silent", true});
-  CHECK(energy == Approx(expected_energy).epsilon(1e-8));
+  CHECK_THAT(energy, Matchers::WithinAbs(expected_energy, 1e-8));
 }
 
 /**
@@ -269,13 +269,13 @@ TEST_CASE("Check AutoMPO in hybrid basis element-wisely", "[HybridBasisMPOElem]"
     CHECK(hasTags(idxs[1], "Link"));
     CHECK(hasTags(idxs[2], "Site"));
     CHECK(hasTags(idxs[3], "Site"));
-    CHECK_FALSE(
-        elt(H(N / 2), 2, 3, 1, 2) ==
-        Approx(elt(H(N / 2 + 1), 2, 3, 1, 2)).epsilon(1e-12)
+    CHECK_THAT(
+        elt(H(N / 2), 2, 3, 1, 2),
+        !Matchers::WithinAbs(elt(H(N / 2 + 1), 2, 3, 1, 2), 1e-12)
     );
-    CHECK_FALSE(
-        elt(H(N / 2), 2, 4, 2, 1) ==
-        Approx(elt(H(N / 2 + 1), 2, 4, 2, 1)).epsilon(1e-12)
+    CHECK_THAT(
+        elt(H(N / 2), 2, 4, 2, 1),
+        !Matchers::WithinAbs(elt(H(N / 2 + 1), 2, 4, 2, 1), 1e-12)
     );
   }
 
@@ -430,8 +430,8 @@ TEST_CASE(
           jw_angle *= elt(H(j), 4, 4, 1, 1);
         }
       }
-      CHECK(jw_angle_dag == Approx(-t).epsilon(1e-12));
-      CHECK(jw_angle == Approx(-t).epsilon(1e-12));
+      CHECK_THAT(jw_angle_dag, Matchers::WithinAbs(-t, 1e-12));
+      CHECK_THAT(jw_angle, Matchers::WithinAbs(-t, 1e-12));
     }
   }
 }
