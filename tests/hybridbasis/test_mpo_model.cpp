@@ -13,7 +13,7 @@ using namespace Catch;
 
 TEST_CASE("Check single particle hamiltonian", "[TestTightBindingSingleParticleHam]") {
   int n_left = GENERATE(4, 6);
-  int n_sys = GENERATE(2, 3, 4);
+  int n_sys = GENERATE(2, 4);
   int n_right = n_left;
   int n_tot = n_left + n_sys + n_right;
   Real t = 0.5;
@@ -32,7 +32,7 @@ TEST_CASE("Check single particle hamiltonian", "[TestTightBindingSingleParticleH
 
 TEST_CASE("Check single particle basis rotation", "[TestBasisRotation]") {
   int n_left = GENERATE(4, 6);
-  int n_sys = GENERATE(2, 3, 4);
+  int n_sys = GENERATE(2, 4);
   int n_right = n_left;
   int n_tot = n_left + n_sys + n_right;
   Real t = 0.5;
@@ -47,12 +47,13 @@ TEST_CASE("Check single particle basis rotation", "[TestBasisRotation]") {
   arma::mat hybrid_ham = model.hybrid_basis_ham();
 
   CHECK_THAT(arma::trace(ham), Matchers::WithinAbs(arma::trace(hybrid_ham), 1e-12));
+  CHECK(std::abs(arma::det(ham)) > 1e-12);  // check non-singular
   CHECK_THAT(arma::det(ham), Matchers::WithinAbs(arma::det(hybrid_ham), 1e-12));
 }
 
 TEST_CASE("Check MPO on real space parts", "[TestTightBindingMPO]") {
   int n_left = GENERATE(4, 6);
-  int n_sys = GENERATE(2, 3, 4);
+  int n_sys = GENERATE(2, 4);
   int n_right = n_left;
   int n_tot = n_left + n_sys + n_right;
   Args args = {"t_left",  0.5, "t_left_sys", 0.5, "t_sys",  0.5, "t_right_sys", 0.5,
@@ -69,7 +70,7 @@ TEST_CASE("Check MPO on real space parts", "[TestTightBindingMPO]") {
 
 TEST_CASE("Check ground state energies are consistent", "[TestTightBindingGS]") {
   int n_left = GENERATE(4, 6);
-  int n_sys = GENERATE(2, 3, 4);
+  int n_sys = GENERATE(2, 4);
   int n_right = n_left;
   int n_tot = n_left + n_sys + n_right;
   Args args = {"t_left",  0.5, "t_left_sys", 0.01, "t_sys",  0.5, "t_right_sys", 0.01,

@@ -22,6 +22,11 @@ itensor::Matrix tight_binding_Hamilt(
     int L, Real t, Real mu, Real damp_fac = 1., bool damp_from_right = true,
     bool verbose = false
 ) {
+  if (L % 2 != 0) {
+    throw std::invalid_argument(
+        "Single particle Hamiltonian is singular for odd system size."
+    );
+  }
   itensor::Matrix H(L, L);
   for (int i = 0; i < L; i++) {
     H(i, i) = -mu;
