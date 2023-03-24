@@ -114,7 +114,7 @@ class FixedPointTensor {
           impo, imps_left, imps_right, imps_left_center, imps_center, imps_left_idty,
           imps_right_idty, dt, args
       );
-      LOG(INFO
+      DLOG(INFO
       ) << std::printf("In time step %o, energy, error = %.3e, %.3e\n", i, en_, err_);
       if (args.getReal("ErrGoal") > tdvp_tol) {
         args.add("ErrGoal=", err_ * 0.1);
