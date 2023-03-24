@@ -37,7 +37,7 @@ jobs:
       - name: Generate a code coverage report
         uses: threeal/gcovr-action@latest
         with:
-          root: hybridleads/
+          root: hybridleads/ tests/
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
