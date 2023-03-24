@@ -104,7 +104,7 @@ TEST_CASE("Check ground state energies are consistent", "[TestTightBindingGS]") 
   auto psi0 = randomMPS(state);
 
   // Run DMRG in 2 bases respectively
-  auto sweeps = Sweeps(8);
+  auto sweeps = Sweeps(16);
   sweeps.maxdim() = 10, 20, 100, 200, 200;
   sweeps.cutoff() = 1E-10;
   auto [energy, psi] = dmrg(H, psi0, sweeps, {"Silent", true});
