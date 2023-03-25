@@ -44,9 +44,11 @@ itensor::Matrix tight_binding_Hamilt(
 class OneParticleBasis {
  public:
   OneParticleBasis() {}
+
   OneParticleBasis(const string& name, const itensor::Matrix& H) : _name(name), _H(H) {
     itensor::diagHermitian(H, _Uik, _ens);
   }
+
   OneParticleBasis(
       const string& name, int L, Real t, Real mu, Real damp_fac = 1.,
       bool damp_from_right = true, bool verbose = false
@@ -55,6 +57,7 @@ class OneParticleBasis {
     _H = tight_binding_Hamilt(L, t, mu, damp_fac, damp_from_right, verbose);
     itensor::diagHermitian(_H, _Uik, _ens);
   }
+
   OneParticleBasis(const string& name, int L) : _name(name) {
     _H = itensor::Matrix(L, L);
     itensor::diagHermitian(_H, _Uik, _ens);
@@ -62,15 +65,19 @@ class OneParticleBasis {
 
   // Functions that every basis class must have
   const string& name() const { return _name; }
+
   std::vector<std::tuple<int, auto, bool>> C_op(int i, bool dag) const;
+
   Real en(int k) const {
     mycheck(k > 0 and k <= _ens.size(), "out of range");
     return _ens(k - 1);
   }
+
   Real mu(int k) const {
     mycheck(k > 0 and k <= _ens.size(), "out of range");
     return -_H(k - 1, k - 1);
   }
+
   int size() const { return _ens.size(); }
 
   void write(ostream& s) const {
@@ -78,6 +85,7 @@ class OneParticleBasis {
     itensor::write(s, _Uik);
     itensor::write(s, _ens);
   }
+
   void read(istream& s) {
     itensor::read(s, _name);
     itensor::read(s, _Uik);
@@ -122,6 +130,7 @@ std::vector<std::tuple<int, auto, bool>> OneParticleBasis ::C_op(int i, bool dag
 }
 
 auto write(ostream& s, const OneParticleBasis& t) { t.write(s); }
+
 auto read(istream& s, OneParticleBasis& t) { t.read(s); }
 
 #endif
