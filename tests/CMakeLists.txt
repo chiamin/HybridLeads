@@ -22,10 +22,10 @@ find_package(Armadillo REQUIRED)
 include_directories(${ARMADILLO_INCLUDE_DIRS})
 
 # Include glog for logging
-find_package (glog 0.6.0 REQUIRED)
+find_package(glog REQUIRED)
 
 # Include Catch2 framework for unit test
-find_package(Catch2 3 REQUIRED)
+find_package(Catch2 REQUIRED)
 
 # Include trompeloeil for mocking in unit test
 find_package(trompeloeil REQUIRED)
