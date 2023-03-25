@@ -16,15 +16,23 @@ jobs:
 
       - name: Set up building directory
         run: |
-          echo "build_dir=tests/build" >> $GITHUB_ENV
+          echo "build_dir=tests/build/" >> $GITHUB_ENV
 
       - name: Build
         run: |
-          cmake -S tests -B ${{ env.build_dir }}
-          make -C ${{ env.build_dir }}
+          cmake -S tests/ -B ${{ env.build_dir }} -G Ninja -DUSE_COVERAGE=ON
+          cmake --build ${{ env.build_dir }}
 
-      - name: Unit Test
+      - name: Install coverage reporter
         run: |
-          for filename in ${{ env.build_dir }}/test_*.exe; do
-            ./"$filename" || continue
-          done
+          apt update
+          apt-get install -y --no-install-recommends python3-pip
+          pip install gcovr
+
+      - name: Unit test and generate coverage reports
+        run: |
+          (cd ${{ env.build_dir }} && ctest -j 2 --verbose)
+          gcovr -k -r hybridleads/ --object-directory ${{ env.build_dir }} --xml coverage.xml
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3

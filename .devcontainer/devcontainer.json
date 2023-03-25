@@ -1,13 +1,13 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/docker-existing-dockerfile
 {
-	"name": "Existing Dockerfile",
+	"name": "Hybridleads",
 
 	// Sets the run context to one level up instead of the .devcontainer folder.
 	"context": "..",
 
 	// Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
-	"dockerFile": "../Dockerfile"
+	"dockerFile": "../Dockerfile",
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
@@ -23,4 +23,7 @@
 
 	// Uncomment to connect as a non-root user if you've added one. See https://aka.ms/vscode-remote/containers/non-root.
 	// "remoteUser": "vscode"
+
+	"workspaceMount": "source=${localWorkspaceFolder},target=/home,type=bind",
+	"workspaceFolder": "/home"
 }

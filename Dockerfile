@@ -7,7 +7,10 @@ WORKDIR $WORKDIR
 COPY . $WORKDIR
 
 # Set up compiling flags for ITensor, and the shared lib path
-ENV CCCOM="g++ -m64 -std=c++17 -fconcepts -fPIC" \
+ENV LANG="en_US.UTF-8" \
+    LANGUAGE="en_US:en" \
+    LC_ALL="en_US.UTF-8" \
+    CCCOM="g++ -m64 -std=c++17 -fconcepts -fPIC" \
     PLATFORM="lapack" \
     BLAS_LAPACK_LIBFLAGS="-lpthread -L/usr/lib -lblas -llapack" \
     LD_LIBRARY_PATH="/usr/local/lib"
@@ -18,11 +21,22 @@ FROM base as runtime
 # Install cmake, lapack, blas
 RUN apt update && \
     apt-get install -y --no-install-recommends \
+    locales \
     cmake \
+    ninja-build \
     # gdb \
     liblapack-dev \
     liblapacke-dev \
-    libopenblas-dev
+    libopenblas-dev \
+    llvm \
+    clang-format \
+    clang-tidy \
+    cppcheck \
+    iwyu \
+    python3-pip
+
+RUN locale-gen en_US.UTF-8 && \
+    pip install cpplint pre-commit
 
 # Copy external dependencies from git submodules into $PKGDIR
 COPY ext $PKGDIR
